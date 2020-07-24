@@ -4,7 +4,8 @@
 *.dll
 *.so
 *.dylib
-http-checks
+cmd/http-check/http-check
+cmd/http-perf/http-perf
 
 # Test binary, build with `go test -c`
 *.test
