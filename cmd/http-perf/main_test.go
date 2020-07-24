@@ -27,7 +27,7 @@ func TestExecuteCheck(t *testing.T) {
 		assert.Equal(expectedMethod, r.Method)
 		assert.Equal(expectedURI, r.RequestURI)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("SUCCESS"))
+		_, _ = w.Write([]byte("SUCCESS"))
 	}))
 	_, err := url.ParseRequestURI(test.URL)
 	require.NoError(t, err)
