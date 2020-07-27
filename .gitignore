@@ -6,6 +6,7 @@
 *.dylib
 cmd/http-check/http-check
 cmd/http-perf/http-perf
+cmd/http-json/http-json
 
 # Test binary, build with `go test -c`
 *.test

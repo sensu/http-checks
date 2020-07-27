@@ -61,6 +61,36 @@ builds:
       - windows_386
       - windows_amd64
 
+  - main: ./cmd/http-json/main.go
+    id: "http-perf"
+    env:
+    - CGO_ENABLED=0
+    ldflags: '-s -w -X github.com/sensu-community/sensu-plugin-sdk/version.version={{.Version}} -X github.com/sensu-community/sensu-plugin-sdk/version.commit={{.Commit}} -X github.com/sensu-community/sensu-plugin-sdk/version.date={{.Date}}'
+    binary: bin/http-json
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - 386
+      - arm
+      - arm64
+    goarm:
+      - 5
+      - 6
+      - 7
+    targets:
+      - darwin_amd64
+      - linux_386
+      - linux_amd64
+      - linux_arm_5
+      - linux_arm_6
+      - linux_arm_7
+      - linux_arm64
+      - windows_386
+      - windows_amd64
+
 checksum:
   name_template: "{{ .ProjectName }}_{{ .Version }}_sha512-checksums.txt"
   algorithm: sha512
