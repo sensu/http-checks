@@ -112,7 +112,6 @@ func checkArgs(event *types.Event) (int, error) {
 	}
 	tlsConfig.InsecureSkipVerify = plugin.InsecureSkipVerify
 
-	// tlsConfig.BuildNameToCertificate()
 	tlsConfig.CipherSuites = corev2.DefaultCipherSuites
 
 	return sensu.CheckStateOK, nil
