@@ -223,7 +223,7 @@ func executeCheck(event *types.Event) (int, error) {
 		return sensu.CheckStateWarning, err
 	}
 
-	fmt.Printf("http-perf OK: %0.6fs | %s\n", totalRequestDuration.Seconds(), perfdata)
+	fmt.Printf("http-perf OK: %s | %s\n", output, perfdata)
 
 	return sensu.CheckStateOK, nil
 }
