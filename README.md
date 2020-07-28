@@ -150,13 +150,13 @@ Available Commands:
   version     Print the version number of this plugin
 
 Flags:
-  -e, --expression string        Expression to query in JSON
-  -h, --help                     help for http-json
-  -i, --insecure-skip-verify     Skip TLS certificate verification (not recommended!)
-  -p, --path string              Path to query in JSON
-  -T, --timeout int              Request timeout in seconds (default 15)
-  -t, --trusted-ca-file string   TLS CA certificate bundle in PEM format
   -u, --url string               URL to test (default "http://localhost:80/")
+  -T, --timeout int              Request timeout in seconds (default 15)
+  -p, --path string              Path to query in JSON
+  -e, --expression string        Expression to query in JSON
+  -t, --trusted-ca-file string   TLS CA certificate bundle in PEM format
+  -i, --insecure-skip-verify     Skip TLS certificate verification (not recommended!)
+  -h, --help                     help for http-json
 
 Use "http-json [command] --help" for more information about a command.
 ```
