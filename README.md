@@ -9,6 +9,7 @@
 - [Usage examples](#usage-examples)
   - [http-check](#http-check)
   - [http-perf](#http-perf)
+  - [http-json](#http-json)
 - [Configuration](#configuration)
   - [Asset registration](#asset-registration)
   - [Check definitions](#check-definition)
@@ -79,7 +80,7 @@ http-check CRITICAL: HTTP Status 404 for https://discourse.sensu.io/notfound
 
 #### Note(s)
 
-* When using `--redirect-ok` it affects both the string search and status check functionality.
+* When using `--redirect-ok` it affects both the string search and status checkfunctionality.
   - For a string search, if true, it searches for the string in the eventual destination. 
   - For a status check, if false, receiving a redirect will return a `warning` status.  If true, it will return an `ok` status.
 
@@ -129,16 +130,64 @@ http-perf WARNING: 262ms | dns_duration=35, tls_handshake_duration=170, connect_
 
 #### Note(s)
 
-* http-perf does **not** follow redirects, the page you are testing will need to be
-referenced explicitly.
+* http-perf does **not** follow redirects, the page you are testing will need to
+be referenced explicitly.
+
+### http-json
+
+#### Help output
+
+```
+HTTP JSON Check
+
+Usage:
+  http-json [flags]
+  http-json [command]
+
+Available Commands:
+  help        Help about any command
+  version     Print the version number of this plugin
+
+Flags:
+  -e, --expression string        Expression to query in JSON
+  -h, --help                     help for http-json
+  -i, --insecure-skip-verify     Skip TLS certificate verification (not recommended!)
+  -p, --path string              Path to query in JSON
+  -T, --timeout int              Request timeout in seconds (default 15)
+  -t, --trusted-ca-file string   TLS CA certificate bundle in PEM format
+  -u, --url string               URL to test (default "http://localhost:80/")
+
+Use "http-json [command] --help" for more information about a command.
+```
+
+#### Example(s)
+
+```
+# String comparison expressions
+http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --path id --expression "== \"HeaFdiyIJe\""
+http-json OK:  The value HeaFdiyIJe found at id matched with expression "== \"HeaFdiyIJe\"" and returned true
+
+http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --path id --expression "== \"BadText\""
+http-json CRITICAL: The value HeaFdiyIJe found at id did not match with expression "== \"BadText\"" and returned false
+
+# Numeric comparison expressions
+http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --path status --expression "== 200"
+http-json OK:  The value 200 found at status matched with expression "== 200" and returned true
+
+http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --path status --expression "< 300"
+http-json OK:  The value 200 found at status matched with expression "< 300" and returned true
+
+http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --path status --expression "> 300"
+http-json CRITICAL: The value 200 found at status did not match with expression "> 300" and returned false
+```
 
 ## Configuration
 
 ### Asset registration
 
-[Sensu Assets][2] are the best way to make use of this plugin. If you're not using an asset, please
-consider doing so! If you're using sensuctl 5.13 with Sensu Backend 5.13 or later, you can use the
-following command to add the asset:
+[Sensu Assets][2] are the best way to make use of this plugin. If you're not
+using an asset, please consider doing so! If you're using sensuctl 5.13 with
+Sensu Backend 5.13 or later, you can use the following command to add the asset:
 
 ```
 sensuctl asset add nixwiz/http-checks
@@ -185,20 +234,43 @@ spec:
   - influxdb
 ```
 
+#### http-json
+
+```yml
+---
+type: CheckConfig
+api_version: core/v2
+metadata:
+  name: http-json
+  namespace: default
+spec:
+  command: http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --path id --expression "== \"HeaFdiyIJe\""
+  subscriptions:
+  - system
+  runtime_assets:
+  - nixwiz/http-checks
+```
+
 ## Installation from source
 
-The preferred way of installing and deploying this plugin is to use it as an Asset. If you would
-like to compile and install the plugin from source or contribute to it, download the latest version
-or create an executable script from this source.
+The preferred way of installing and deploying this plugin is to use it as an
+Asset. If you would like to compile and install the plugin from source or
+contribute to it, download the latest version or create an executable script
+from this source.
 
 From the local path of the http-checks repository:
 
 ```
 go build -o bin/http-check ./cmd/http-check
 go build -o bin/http-perf ./cmd/http-perf
+go build -o bin/http-json ./cmd/http-json
 ```
 
 ## Additional notes
+
+Portions of http-check and http-json are based on and/or derived from the HTTP
+check found in the [NCR DevOps Platform nagiosfoundation][5] collection of
+checks.
 
 ## Contributing
 
@@ -208,3 +280,4 @@ For more information about contributing to this plugin, see [Contributing][4].
 [2]: https://docs.sensu.io/sensu-go/latest/reference/assets/
 [3]: https://bonsai.sensu.io/assets/nixwiz/http-checks
 [4]: https://github.com/sensu/sensu-go/blob/master/CONTRIBUTING.md
+[5]: https://github.com/ncr-devops-platform/nagiosfoundation

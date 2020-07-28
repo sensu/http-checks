@@ -1,3 +1,7 @@
+/* Portions of this code are based on and/or derived from the HTTP
+   check found in the NCR DevOps Platform nagiosfoundation collection of
+   checks found at https://github.com/ncr-devops-platform/nagiosfoundation */
+
 package main
 
 import (
