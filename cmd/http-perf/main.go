@@ -16,12 +16,12 @@ import (
 // Config represents the check plugin config.
 type Config struct {
 	sensu.PluginConfig
-	URL                string
-	TrustedCAFile      string
-	InsecureSkipVerify bool
-	Timeout            int
-	Warning            string
-	Critical           string
+	URL                  string
+	TrustedCAFile        string
+	InsecureSkipVerify   bool
+	Timeout              int
+	Warning              string
+	Critical             string
 	OutputInMilliseconds bool
 }
 

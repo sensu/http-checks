@@ -163,10 +163,9 @@ func executeCheck(event *types.Event) (int, error) {
 		if strings.Contains(string(body), plugin.SearchString) {
 			fmt.Printf("%s OK: found \"%s\" at %s\n", plugin.PluginConfig.Name, plugin.SearchString, resp.Request.URL)
 			return sensu.CheckStateOK, nil
-		} else {
-			fmt.Printf("%s CRITICAL: \"%s\" not found at %s\n", plugin.PluginConfig.Name, plugin.SearchString, resp.Request.URL)
-			return sensu.CheckStateCritical, err
 		}
+		fmt.Printf("%s CRITICAL: \"%s\" not found at %s\n", plugin.PluginConfig.Name, plugin.SearchString, resp.Request.URL)
+		return sensu.CheckStateCritical, err
 	}
 
 	switch {
@@ -189,7 +188,7 @@ func executeCheck(event *types.Event) (int, error) {
 		fmt.Printf("%s WARNING: HTTP Status %v for %s %s\n", plugin.PluginConfig.Name, resp.StatusCode, plugin.URL, extra)
 		return sensu.CheckStateWarning, nil
 	case resp.StatusCode == -1:
-		fmt.Printf("%s UNKOWN: HTTP Status %v for %s\n", plugin.PluginConfig.Name, resp.StatusCode, plugin.URL)
+		fmt.Printf("%s UNKNOWN: HTTP Status %v for %s\n", plugin.PluginConfig.Name, resp.StatusCode, plugin.URL)
 		return sensu.CheckStateUnknown, nil
 	default:
 		fmt.Printf("%s OK: HTTP Status %v for %s\n", plugin.PluginConfig.Name, resp.StatusCode, plugin.URL)

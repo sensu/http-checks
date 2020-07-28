@@ -26,7 +26,7 @@ type Config struct {
 	TrustedCAFile      string
 	InsecureSkipVerify bool
 	Timeout            int
-	Path		   string
+	Path               string
 	Expression         string
 }
 
