@@ -119,6 +119,12 @@ func checkArgs(event *types.Event) (int, error) {
 
 	tlsConfig.CipherSuites = corev2.DefaultCipherSuites
 
+	if len(plugin.Path) == 0 {
+		return sensu.CheckStateWarning, fmt.Errorf("--path is required")
+	}
+	if len(plugin.Expression) == 0 {
+		return sensu.CheckStateWarning, fmt.Errorf("--expression is required")
+	}
 	return sensu.CheckStateOK, nil
 }
 
