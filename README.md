@@ -164,6 +164,10 @@ Use "http-json [command] --help" for more information about a command.
 #### Example(s)
 
 ```
+# Boolean example - checking Sensu cluster health
+http-json --url http://backend:8080/health --path ClusterHealth.[0].Healthy --expression "== true"
+http-json OK:  The value true found at ClusterHealth.[0].Healthy matched with expression "== true" and returned true
+
 # String comparison expressions
 http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --path id --expression "== \"HeaFdiyIJe\""
 http-json OK:  The value HeaFdiyIJe found at id matched with expression "== \"HeaFdiyIJe\"" and returned true
