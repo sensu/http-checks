@@ -6,6 +6,8 @@
 
 ## Table of Contents
 - [Overview](#overview)
+  - [Attribution](#attribution)
+  - [Checks](#checks)
 - [Usage examples](#usage-examples)
   - [http-check](#http-check)
   - [http-perf](#http-perf)
@@ -14,18 +16,28 @@
   - [Asset registration](#asset-registration)
   - [Check definitions](#check-definition)
 - [Installation from source](#installation-from-source)
-- [Additional notes](#additional-notes)
 - [Contributing](#contributing)
 
 ## Overview
 
-The http-checks is a colleciton of [Sensu Checks][1] that providing monitoring
-and metrics for HTTP based services.
+The http-checks is a collection of [Sensu Checks][1] that providing monitoring
+and metrics for HTTP based services.  These are relatively simple checks at the
+moment, but future enhancements such as custom headers are planned.
+
+### Attribution
+
+Portions of http-check and http-json are based on and/or derived from the HTTP
+check found in the [NCR DevOps Platform nagiosfoundation][5] collection of
+checks.
+
+### Checks
 
 This collection contains the following checks:
 
-* http-check - for checking HTTP status or searching for a string in the response body
-* http-perf - for checking HTTP performance by measuring response times, provides metrics in nagios_perfdata format
+* http-check - for checking HTTP status or searching for a string in the
+response body
+* http-perf - for checking HTTP performance by measuring response times,
+provides metrics in nagios_perfdata format
 * http-json - for querying JSON output from an HTTP request
 
 ## Usage examples
@@ -270,12 +282,6 @@ go build -o bin/http-check ./cmd/http-check
 go build -o bin/http-perf ./cmd/http-perf
 go build -o bin/http-json ./cmd/http-json
 ```
-
-## Additional notes
-
-Portions of http-check and http-json are based on and/or derived from the HTTP
-check found in the [NCR DevOps Platform nagiosfoundation][5] collection of
-checks.
 
 ## Contributing
 
