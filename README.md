@@ -34,11 +34,11 @@ checks.
 
 This collection contains the following checks:
 
-* http-check - for checking HTTP status or searching for a string in the
+* `http-check` - for checking HTTP status or searching for a string in the
 response body
-* http-perf - for checking HTTP performance by measuring response times,
+* `http-perf` - for checking HTTP performance by measuring response times,
 provides metrics in nagios_perfdata format
-* http-json - for querying JSON output from an HTTP request
+* `http-json` - for querying JSON output from an HTTP request
 
 ## Usage examples
 
