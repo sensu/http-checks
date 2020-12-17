@@ -165,7 +165,7 @@ func executeCheck(event *types.Event) (int, error) {
 			return sensu.CheckStateOK, nil
 		}
 		fmt.Printf("%s CRITICAL: \"%s\" not found at %s\n", plugin.PluginConfig.Name, plugin.SearchString, resp.Request.URL)
-		return sensu.CheckStateCritical, err
+		return sensu.CheckStateCritical, nil
 	}
 
 	switch {

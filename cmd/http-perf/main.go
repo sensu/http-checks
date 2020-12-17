@@ -204,10 +204,6 @@ func executeCheck(event *types.Event) (int, error) {
 
 	defer resp.Body.Close()
 
-	if err != nil {
-		return sensu.CheckStateCritical, err
-	}
-
 	if plugin.OutputInMilliseconds {
 		output = fmt.Sprintf("%dms", totalRequestDuration.Milliseconds())
 		perfdata = fmt.Sprintf("dns_duration=%d, tls_handshake_duration=%d, connect_duration=%d, first_byte_duration=%d, total_request_duration=%d", dnsDuration.Milliseconds(), tlsHandshakeDuration.Milliseconds(), connectDuration.Milliseconds(), firstByteDuration.Milliseconds(), totalRequestDuration.Milliseconds())
@@ -217,10 +213,10 @@ func executeCheck(event *types.Event) (int, error) {
 	}
 	if totalRequestDuration > critical {
 		fmt.Printf("http-perf CRITICAL: %s | %s\n", output, perfdata)
-		return sensu.CheckStateCritical, err
+		return sensu.CheckStateCritical, nil
 	} else if totalRequestDuration > warning {
 		fmt.Printf("http-perf WARNING: %s | %s\n", output, perfdata)
-		return sensu.CheckStateWarning, err
+		return sensu.CheckStateWarning, nil
 	}
 
 	fmt.Printf("http-perf OK: %s | %s\n", output, perfdata)
