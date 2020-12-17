@@ -7,6 +7,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [0.1.3] - 2020-12-17
+
 ### Changed
 - README changes
 - Fix some returns for state to use nil instead of err so the help is not printed
