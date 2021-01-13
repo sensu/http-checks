@@ -62,6 +62,7 @@ Flags:
   -s, --search-string string     String to search for, if not provided do status check only
   -r, --redirect-ok              Allow redirects
   -T, --timeout int              Request timeout in seconds (default 15)
+  -H, --header strings           Additional header(s) to send in check request
   -t, --trusted-ca-file string   TLS CA certificate bundle in PEM format
   -i, --insecure-skip-verify     Skip TLS certificate verification (not recommended!)
   -h, --help                     help for http-check
@@ -89,6 +90,9 @@ http-check OK: HTTP Status 200 for https://sensu.io/oops (redirect from https://
 
 http-check --url https://discourse.sensu.io/notfound
 http-check CRITICAL: HTTP Status 404 for https://discourse.sensu.io/notfound
+
+http-check --url http://localhost:8000/health --header "Origin: test.server.local" --header "RandomHeader: Header value goes here"
+http-check OK: HTTP Status 200 for http://localhost:8000/health
 ```
 
 #### Note(s)
@@ -96,6 +100,7 @@ http-check CRITICAL: HTTP Status 404 for https://discourse.sensu.io/notfound
 * When using `--redirect-ok` it affects both the string search and status checkfunctionality.
   - For a string search, if true, it searches for the string in the eventual destination. 
   - For a status check, if false, receiving a redirect will return a `warning` status.  If true, it will return an `ok` status.
+* Headers should be in the form of "Header-Name: Header value".
 
 ### http-perf
 
@@ -118,6 +123,7 @@ Flags:
   -w, --warning string           Warning threshold, can be expressed as seconds or milliseconds (1s = 1000ms) (default "1s")
   -c, --critical string          Critical threshold, can be expressed as seconds or milliseconds (1s = 1000ms) (default "2s")
   -m, --output-in-ms             Provide output in milliseconds (default false, display in seconds)
+  -H, --header strings           Additional header(s) to send in check request
   -t, --trusted-ca-file string   TLS CA certificate bundle in PEM format
   -i, --insecure-skip-verify     Skip TLS certificate verification (not recommended!)
   -h, --help                     help for http-perf
@@ -139,12 +145,16 @@ http-perf WARNING: 0.304795s | dns_duration=0.033904, tls_handshake_duration=0.1
 http-perf --url https://sensu.io --warning 10ms --critical 1s --output-in-ms
 http-perf WARNING: 262ms | dns_duration=35, tls_handshake_duration=170, connect_duration=22, first_byte_duration=262, total_request_duration=262
 
+# With cusomter header(s)
+http-perf --url https://sensu.io --warning 1s --critical 2s --header "Custom-Header: Custom header value"
+http-perf OK: 0.243321s | dns_duration=0.016596, tls_handshake_duration=0.172235, connect_duration=0.022199, first_byte_duration=0.243267, total_request_duration=0.243321
 ```
 
 #### Note(s)
 
 * http-perf does **not** follow redirects, the page you are testing will need to
 be referenced explicitly.
+* Headers should be in the form of "Header-Name: Header value".
 
 ### http-json
 
@@ -166,6 +176,7 @@ Flags:
   -T, --timeout int              Request timeout in seconds (default 15)
   -p, --path string              Path to query in JSON
   -e, --expression string        Expression to query in JSON
+  -H, --header strings           Additional header(s) to send in check request
   -t, --trusted-ca-file string   TLS CA certificate bundle in PEM format
   -i, --insecure-skip-verify     Skip TLS certificate verification (not recommended!)
   -h, --help                     help for http-json
@@ -196,7 +207,15 @@ http-json OK:  The value 200 found at status matched with expression "< 300" and
 
 http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --path status --expression "> 300"
 http-json CRITICAL: The value 200 found at status did not match with expression "> 300" and returned false
+
+http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --path status --expression "< 300" --header "Custom-Header: Custom header value"
+http-json OK:  The value 200 found at status matched with expression "< 300" and returned true
+
 ```
+
+#### Note(s)
+
+* Headers should be in the form of "Header-Name: Header value".
 
 ## Configuration
 

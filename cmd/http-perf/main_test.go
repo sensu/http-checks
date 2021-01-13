@@ -26,12 +26,15 @@ func TestExecuteCheck(t *testing.T) {
 		expectedURI := "/"
 		assert.Equal(expectedMethod, r.Method)
 		assert.Equal(expectedURI, r.RequestURI)
+		assert.Equal("Test Header 1 Value", r.Header.Get("Test-Header-1"))
+		assert.Equal("Test Header 2 Value", r.Header.Get("Test-Header-2"))
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("SUCCESS"))
 	}))
 	_, err := url.ParseRequestURI(test.URL)
 	require.NoError(t, err)
 	plugin.URL = test.URL
+	plugin.Headers = []string{"Test-Header-1: Test Header 1 Value", "Test-Header-2: Test Header 2 Value"}
 	warning, _ = time.ParseDuration("2s")
 	critical, _ = time.ParseDuration("5s")
 	status, err := executeCheck(event)

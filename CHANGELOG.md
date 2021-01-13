@@ -7,6 +7,12 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Changed
+- Fixed the ordering for some assert.Equal test cases
+
+### Added
+- Added support for custom headers to all three checks
+
 ## [0.1.3] - 2020-12-17
 
 ### Changed
