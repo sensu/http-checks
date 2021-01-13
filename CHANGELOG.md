@@ -7,6 +7,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [0.2.0] - 2021-01-13
+
 ### Changed
 - Fixed the ordering for some assert.Equal test cases
 
