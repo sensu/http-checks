@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptrace"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/sensu-community/sensu-plugin-sdk/sensu"
@@ -23,6 +24,7 @@ type Config struct {
 	Warning              string
 	Critical             string
 	OutputInMilliseconds bool
+	Headers              []string
 }
 
 var (
@@ -101,6 +103,15 @@ var (
 			Usage:     "Provide output in milliseconds (default false, display in seconds)",
 			Value:     &plugin.OutputInMilliseconds,
 		},
+		{
+			Path:      "header",
+			Env:       "",
+			Argument:  "header",
+			Shorthand: "H",
+			Default:   []string{},
+			Usage:     "Additional header(s) to send in check request",
+			Value:     &plugin.Headers,
+		},
 	}
 )
 
@@ -115,8 +126,13 @@ func checkArgs(event *types.Event) (int, error) {
 	if len(plugin.URL) == 0 {
 		return sensu.CheckStateWarning, fmt.Errorf("--url or CHECK_URL environment variable is required")
 	}
-	if err != nil {
-		return sensu.CheckStateCritical, err
+	if len(plugin.Headers) > 0 {
+		for _, header := range plugin.Headers {
+			headerSplit := strings.SplitN(header, ":", 2)
+			if len(headerSplit) != 2 {
+				return sensu.CheckStateWarning, fmt.Errorf("--header %q value malformed should be \"Header-Name: Header Value\"", header)
+			}
+		}
 	}
 	warning, err = time.ParseDuration(plugin.Warning)
 	if err != nil {
@@ -157,6 +173,12 @@ func executeCheck(event *types.Event) (int, error) {
 	req, err := http.NewRequest("GET", plugin.URL, nil)
 	if err != nil {
 		return sensu.CheckStateCritical, err
+	}
+	if len(plugin.Headers) > 0 {
+		for _, header := range plugin.Headers {
+			headerSplit := strings.SplitN(header, ":", 2)
+			req.Header.Set(strings.TrimSpace(headerSplit[0]), strings.TrimSpace(headerSplit[1]))
+		}
 	}
 
 	var (

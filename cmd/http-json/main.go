@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/PaesslerAG/gval"
@@ -28,6 +29,7 @@ type Config struct {
 	Timeout            int
 	Path               string
 	Expression         string
+	Headers            []string
 }
 
 var (
@@ -96,6 +98,15 @@ var (
 			Usage:     "Expression to query in JSON",
 			Value:     &plugin.Expression,
 		},
+		{
+			Path:      "header",
+			Env:       "",
+			Argument:  "header",
+			Shorthand: "H",
+			Default:   []string{},
+			Usage:     "Additional header(s) to send in check request",
+			Value:     &plugin.Headers,
+		},
 	}
 )
 
@@ -107,6 +118,14 @@ func main() {
 func checkArgs(event *types.Event) (int, error) {
 	if len(plugin.URL) == 0 {
 		return sensu.CheckStateWarning, fmt.Errorf("--url or CHECK_URL environment variable is required")
+	}
+	if len(plugin.Headers) > 0 {
+		for _, header := range plugin.Headers {
+			headerSplit := strings.SplitN(header, ":", 2)
+			if len(headerSplit) != 2 {
+				return sensu.CheckStateWarning, fmt.Errorf("--header %q value malformed should be \"Header-Name: Header Value\"", header)
+			}
+		}
 	}
 	if len(plugin.TrustedCAFile) > 0 {
 		caCertPool, err := corev2.LoadCACerts(plugin.TrustedCAFile)
@@ -148,6 +167,12 @@ func executeCheck(event *types.Event) (int, error) {
 	}
 
 	req.Header.Set("Accept", "application/json")
+	if len(plugin.Headers) > 0 {
+		for _, header := range plugin.Headers {
+			headerSplit := strings.SplitN(header, ":", 2)
+			req.Header.Set(strings.TrimSpace(headerSplit[0]), strings.TrimSpace(headerSplit[1]))
+		}
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {
