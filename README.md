@@ -123,6 +123,7 @@ Flags:
   -w, --warning string           Warning threshold, can be expressed as seconds or milliseconds (1s = 1000ms) (default "1s")
   -c, --critical string          Critical threshold, can be expressed as seconds or milliseconds (1s = 1000ms) (default "2s")
   -m, --output-in-ms             Provide output in milliseconds (default false, display in seconds)
+  -H, --header strings           Additional header(s) to send in check request
   -t, --trusted-ca-file string   TLS CA certificate bundle in PEM format
   -i, --insecure-skip-verify     Skip TLS certificate verification (not recommended!)
   -h, --help                     help for http-perf
