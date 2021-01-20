@@ -33,21 +33,21 @@ func TestExecuteCheck(t *testing.T) {
 
 	testCases := []struct {
 		status     int
-		path       string
+		query      string
 		expression string
 	}{
-		{sensu.CheckStateOK, "text", "== \"testing\""},
-		{sensu.CheckStateCritical, "text", "== \"notfound\""},
-		{sensu.CheckStateOK, "number", "== 10"},
-		{sensu.CheckStateCritical, "number", "== 11"},
-		{sensu.CheckStateOK, "number", ">= 10"},
-		{sensu.CheckStateOK, "number", "> 9"},
-		{sensu.CheckStateCritical, "number", ">= 11"},
-		{sensu.CheckStateCritical, "number", "> 12"},
-		{sensu.CheckStateOK, "number", "<= 10"},
-		{sensu.CheckStateOK, "number", "< 11"},
-		{sensu.CheckStateCritical, "number", "<= 9"},
-		{sensu.CheckStateCritical, "number", "< 8"},
+		{sensu.CheckStateOK, ".text", "== \"testing\""},
+		{sensu.CheckStateCritical, ".text", "== \"notfound\""},
+		{sensu.CheckStateOK, ".number", "== 10"},
+		{sensu.CheckStateCritical, ".number", "== 11"},
+		{sensu.CheckStateOK, ".number", ">= 10"},
+		{sensu.CheckStateOK, ".number", "> 9"},
+		{sensu.CheckStateCritical, ".number", ">= 11"},
+		{sensu.CheckStateCritical, ".number", "> 12"},
+		{sensu.CheckStateOK, ".number", "<= 10"},
+		{sensu.CheckStateOK, ".number", "< 11"},
+		{sensu.CheckStateCritical, ".number", "<= 9"},
+		{sensu.CheckStateCritical, ".number", "< 8"},
 	}
 
 	for _, tc := range testCases {
@@ -65,7 +65,7 @@ func TestExecuteCheck(t *testing.T) {
 		require.NoError(t, err)
 		plugin.URL = test.URL
 		plugin.Expression = tc.expression
-		plugin.Path = tc.path
+		plugin.Query = tc.query
 		status, err := executeCheck(event)
 		assert.NoError(err)
 		assert.Equal(tc.status, status)
@@ -82,7 +82,7 @@ func TestExecuteCheck(t *testing.T) {
 	_, err := url.ParseRequestURI(test.URL)
 	require.NoError(t, err)
 	plugin.URL = test.URL
-	plugin.Path = "number"
+	plugin.Query = ".number"
 	plugin.Expression = "== 10"
 	plugin.Headers = []string{"Test-Header-1: Test Header 1 Value", "Test-Header-2: Test Header 2 Value"}
 	status, err := executeCheck(event)

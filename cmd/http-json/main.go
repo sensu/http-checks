@@ -6,6 +6,7 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -14,10 +15,9 @@ import (
 	"time"
 
 	"github.com/PaesslerAG/gval"
+	"github.com/itchyny/gojq"
 	"github.com/sensu-community/sensu-plugin-sdk/sensu"
 	corev2 "github.com/sensu/sensu-go/api/core/v2"
-	"github.com/sensu/sensu-go/types"
-	"github.com/thedevsaddam/gojsonq"
 )
 
 // Config represents the check plugin config.
@@ -27,7 +27,7 @@ type Config struct {
 	TrustedCAFile      string
 	InsecureSkipVerify bool
 	Timeout            int
-	Path               string
+	Query              string
 	Expression         string
 	Headers            []string
 	MTLSKeyFile        string
@@ -83,13 +83,13 @@ var (
 			Value:     &plugin.Timeout,
 		},
 		{
-			Path:      "path",
+			Path:      "query",
 			Env:       "",
-			Argument:  "path",
-			Shorthand: "p",
+			Argument:  "query",
+			Shorthand: "q",
 			Default:   "",
-			Usage:     "Path to query in JSON",
-			Value:     &plugin.Path,
+			Usage:     "Query written in jq format",
+			Value:     &plugin.Query,
 		},
 		{
 			Path:      "expression",
@@ -97,7 +97,7 @@ var (
 			Argument:  "expression",
 			Shorthand: "e",
 			Default:   "",
-			Usage:     "Expression to query in JSON",
+			Usage:     "Expression for comparing result of query",
 			Value:     &plugin.Expression,
 		},
 		{
@@ -135,7 +135,7 @@ func main() {
 	check.Execute()
 }
 
-func checkArgs(event *types.Event) (int, error) {
+func checkArgs(event *corev2.Event) (int, error) {
 	if len(plugin.URL) == 0 {
 		return sensu.CheckStateWarning, fmt.Errorf("--url or CHECK_URL environment variable is required")
 	}
@@ -169,8 +169,8 @@ func checkArgs(event *types.Event) (int, error) {
 		tlsConfig.Certificates = []tls.Certificate{cert}
 	}
 
-	if len(plugin.Path) == 0 {
-		return sensu.CheckStateWarning, fmt.Errorf("--path is required")
+	if len(plugin.Query) == 0 {
+		return sensu.CheckStateWarning, fmt.Errorf("--query is required")
 	}
 	if len(plugin.Expression) == 0 {
 		return sensu.CheckStateWarning, fmt.Errorf("--expression is required")
@@ -178,7 +178,7 @@ func checkArgs(event *types.Event) (int, error) {
 	return sensu.CheckStateOK, nil
 }
 
-func executeCheck(event *types.Event) (int, error) {
+func executeCheck(event *corev2.Event) (int, error) {
 
 	client := http.DefaultClient
 	client.Transport = http.DefaultTransport
@@ -221,21 +221,58 @@ func executeCheck(event *types.Event) (int, error) {
 		return sensu.CheckStateCritical, err
 	}
 
-	value := gojsonq.New().JSONString(string(body)).Find(plugin.Path)
+	query, err := gojq.Parse(plugin.Query)
+	if err != nil {
+		return sensu.CheckStateCritical, fmt.Errorf("Failed to parse query %q, error: %v", plugin.Query, err)
+	}
+	code, err := gojq.Compile(query)
+	if err != nil {
+		return sensu.CheckStateCritical, fmt.Errorf("Failed to compile query %q, error: %v", plugin.Query, err)
+	}
 
-	found, err := evaluateExpression(value, plugin.Expression, plugin.Path)
+	var jsonBody interface{}
+
+	err = json.Unmarshal(body, &jsonBody)
+	if err != nil {
+		return sensu.CheckStateCritical, fmt.Errorf("Could not unmarshal response body into JSON: %v", err)
+	}
+
+	iter := code.Run(jsonBody)
+
+	var value interface{}
+
+	for {
+		var ok bool
+		v, ok := iter.Next()
+		if !ok {
+			// no more iterations
+			break
+		}
+		if _, ok := v.(error); ok {
+			// should we output anything here?
+			continue
+		}
+		value = v
+	}
+
+	if value == nil {
+		fmt.Printf("%s CRITICAL: No value was returned for query %q\n", plugin.PluginConfig.Name, plugin.Query)
+		return sensu.CheckStateCritical, nil
+	}
+
+	found, err := evaluateExpression(value, plugin.Expression)
 	if err != nil {
 		return sensu.CheckStateCritical, fmt.Errorf("Error evaluating expression: %v", err)
 	}
 	if found {
-		fmt.Printf("%s OK:  The value %v found at %s matched with expression %q and returned true\n", plugin.PluginConfig.Name, value, plugin.Path, plugin.Expression)
+		fmt.Printf("%s OK:  The value %v found at %s matched with expression %q and returned true\n", plugin.PluginConfig.Name, value, plugin.Query, plugin.Expression)
 		return sensu.CheckStateOK, nil
 	}
 
-	fmt.Printf("%s CRITICAL: The value %v found at %s did not match with expression %q and returned false\n", plugin.PluginConfig.Name, value, plugin.Path, plugin.Expression)
+	fmt.Printf("%s CRITICAL: The value %v found at %s did not match with expression %q and returned false\n", plugin.PluginConfig.Name, value, plugin.Query, plugin.Expression)
 	return sensu.CheckStateCritical, nil
 }
-func evaluateExpression(actualValue interface{}, expression, path string) (bool, error) {
+func evaluateExpression(actualValue interface{}, expression string) (bool, error) {
 	evalResult, err := gval.Evaluate("value "+expression, map[string]interface{}{"value": actualValue})
 	if err != nil {
 		return false, err

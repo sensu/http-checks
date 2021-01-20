@@ -173,43 +173,51 @@ Available Commands:
 
 Flags:
   -u, --url string               URL to test (default "http://localhost:80/")
-  -T, --timeout int              Request timeout in seconds (default 15)
-  -p, --path string              Path to query in JSON
-  -e, --expression string        Expression to query in JSON
+  -q, --query string             Query written in jq format
+  -e, --expression string        Expression for comparing result of query
   -H, --header strings           Additional header(s) to send in check request
-  -t, --trusted-ca-file string   TLS CA certificate bundle in PEM format
   -i, --insecure-skip-verify     Skip TLS certificate verification (not recommended!)
+  -t, --trusted-ca-file string   TLS CA certificate bundle in PEM format
+  -T, --timeout int              Request timeout in seconds (default 15)
   -h, --help                     help for http-json
 
 Use "http-json [command] --help" for more information about a command.
 ```
 
+#### Writing queries and expressions
+
+Queries are written in [jq][6] format as implemented by the [gojq][7] library.
+The query is used to obtain a value in the JSON requested from the URL
+specified by `--url`. This value is then evaluated against the expression
+provided by `--expression`.
+
 #### Example(s)
 
 ```
 # Boolean example - checking Sensu cluster health
-http-json --url http://backend:8080/health --path ClusterHealth.[0].Healthy --expression "== true"
-http-json OK:  The value true found at ClusterHealth.[0].Healthy matched with expression "== true" and returned true
+http-json --url http://backend:8080/health --query ".ClusterHealth.[0].Healthy" --expression "== true"
+http-json OK:  The value true found at .ClusterHealth.[0].Healthy matched with expression "== true" and returned true
 
 # String comparison expressions
-http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --path id --expression "== \"HeaFdiyIJe\""
-http-json OK:  The value HeaFdiyIJe found at id matched with expression "== \"HeaFdiyIJe\"" and returned true
+http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --query .id --expression "== \"HeaFdiyIJe\""
+http-json OK:  The value HeaFdiyIJe found at .id matched with expression "== \"HeaFdiyIJe\"" and returned true
 
-http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --path id --expression "== \"BadText\""
-http-json CRITICAL: The value HeaFdiyIJe found at id did not match with expression "== \"BadText\"" and returned false
+http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --query .id --expression "== \"BadText\""
+http-json CRITICAL: The value HeaFdiyIJe found at .id did not match with expression "== \"BadText\"" and returned false
 
 # Numeric comparison expressions
-http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --path status --expression "== 200"
-http-json OK:  The value 200 found at status matched with expression "== 200" and returned true
+http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --query .status --expression "== 200"
+http-json OK:  The value 200 found at .status matched with expression "== 200" and returned true
 
-http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --path status --expression "< 300"
-http-json OK:  The value 200 found at status matched with expression "< 300" and returned true
+http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --query .status --expression "< 300"
+http-json OK:  The value 200 found at .status matched with expression "< 300" and returned true
 
-http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --path status --expression "> 300"
-http-json CRITICAL: The value 200 found at status did not match with expression "> 300" and returned false
+http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --query .status --expression "> 300"
+http-json CRITICAL: The value 200 found at .status did not match with expression "> 300" and returned false
 
-http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --path status --expression "< 300" --header "Custom-Header: Custom header value"
-http-json OK:  The value 200 found at status matched with expression "< 300" and returned true
+# With a custom header
+http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --query .status --expression "< 300" --header "Custom-Header: Custom header value"
+http-json OK:  The value 200 found at .status matched with expression "< 300" and returned true
 
 ```
 
@@ -311,3 +319,5 @@ For more information about contributing to this plugin, see [Contributing][4].
 [3]: https://bonsai.sensu.io/assets/nixwiz/http-checks
 [4]: https://github.com/sensu/sensu-go/blob/master/CONTRIBUTING.md
 [5]: https://github.com/ncr-devops-platform/nagiosfoundation
+[6]: https://github.com/stedolan/jq
+[7]: https://github.com/itchyny/gojq
