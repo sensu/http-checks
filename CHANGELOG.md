@@ -7,6 +7,9 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### BREAKING CHANGE
+- Changed from --path using gojsonq to --query using gojq
+
 ## [0.2.0] - 2021-01-13
 
 ### Changed
