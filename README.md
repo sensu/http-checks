@@ -200,24 +200,24 @@ http-json OK:  The value true found at .ClusterHealth.[0].Healthy matched with e
 
 # String comparison expressions
 http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --query .id --expression "== \"HeaFdiyIJe\""
-http-json OK:  The value HeaFdiyIJe found at id matched with expression "== \"HeaFdiyIJe\"" and returned true
+http-json OK:  The value HeaFdiyIJe found at .id matched with expression "== \"HeaFdiyIJe\"" and returned true
 
 http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --query .id --expression "== \"BadText\""
-http-json CRITICAL: The value HeaFdiyIJe found at id did not match with expression "== \"BadText\"" and returned false
+http-json CRITICAL: The value HeaFdiyIJe found at .id did not match with expression "== \"BadText\"" and returned false
 
 # Numeric comparison expressions
 http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --query .status --expression "== 200"
-http-json OK:  The value 200 found at status matched with expression "== 200" and returned true
+http-json OK:  The value 200 found at .status matched with expression "== 200" and returned true
 
 http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --query .status --expression "< 300"
-http-json OK:  The value 200 found at status matched with expression "< 300" and returned true
+http-json OK:  The value 200 found at .status matched with expression "< 300" and returned true
 
 http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --query .status --expression "> 300"
-http-json CRITICAL: The value 200 found at status did not match with expression "> 300" and returned false
+http-json CRITICAL: The value 200 found at .status did not match with expression "> 300" and returned false
 
 # With a custom header
 http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --query .status --expression "< 300" --header "Custom-Header: Custom header value"
-http-json OK:  The value 200 found at status matched with expression "< 300" and returned true
+http-json OK:  The value 200 found at .status matched with expression "< 300" and returned true
 
 ```
 
