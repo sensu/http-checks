@@ -7,6 +7,8 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [0.4.0] - 2021-01-21
+
 ### Added
 - Added support for mTLS authentication
 
