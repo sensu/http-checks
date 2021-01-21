@@ -21,8 +21,7 @@
 ## Overview
 
 The http-checks is a collection of [Sensu Checks][1] that providing monitoring
-and metrics for HTTP based services.  These are relatively simple checks at the
-moment, but future enhancements such as custom headers are planned.
+and metrics for HTTP based services.
 
 ### Attribution
 
@@ -63,6 +62,8 @@ Flags:
   -r, --redirect-ok              Allow redirects
   -T, --timeout int              Request timeout in seconds (default 15)
   -H, --header strings           Additional header(s) to send in check request
+  -C, --mtls-cert-file string    Certificate file for mutual TLS auth in PEM format
+  -K, --mtls-key-file string     Key file for mutual TLS auth in PEM format
   -t, --trusted-ca-file string   TLS CA certificate bundle in PEM format
   -i, --insecure-skip-verify     Skip TLS certificate verification (not recommended!)
   -h, --help                     help for http-check
@@ -124,6 +125,8 @@ Flags:
   -c, --critical string          Critical threshold, can be expressed as seconds or milliseconds (1s = 1000ms) (default "2s")
   -m, --output-in-ms             Provide output in milliseconds (default false, display in seconds)
   -H, --header strings           Additional header(s) to send in check request
+  -C, --mtls-cert-file string    Certificate file for mutual TLS auth in PEM format
+  -K, --mtls-key-file string     Key file for mutual TLS auth in PEM format
   -t, --trusted-ca-file string   TLS CA certificate bundle in PEM format
   -i, --insecure-skip-verify     Skip TLS certificate verification (not recommended!)
   -h, --help                     help for http-perf
@@ -176,6 +179,8 @@ Flags:
   -q, --query string             Query written in jq format
   -e, --expression string        Expression for comparing result of query
   -H, --header strings           Additional header(s) to send in check request
+  -C, --mtls-cert-file string    Certificate file for mutual TLS auth in PEM format
+  -K, --mtls-key-file string     Key file for mutual TLS auth in PEM format
   -i, --insecure-skip-verify     Skip TLS certificate verification (not recommended!)
   -t, --trusted-ca-file string   TLS CA certificate bundle in PEM format
   -T, --timeout int              Request timeout in seconds (default 15)
