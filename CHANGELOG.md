@@ -7,6 +7,9 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Added
+- Added support for mTLS authentication
+
 ### Changed
 - Fixed http-json example outputs
 

@@ -25,6 +25,8 @@ type Config struct {
 	Critical             string
 	OutputInMilliseconds bool
 	Headers              []string
+	MTLSKeyFile          string
+	MTLSCertFile         string
 }
 
 var (
@@ -112,6 +114,24 @@ var (
 			Usage:     "Additional header(s) to send in check request",
 			Value:     &plugin.Headers,
 		},
+		{
+			Path:      "mtls-key-file",
+			Env:       "",
+			Argument:  "mtls-key-file",
+			Shorthand: "K",
+			Default:   "",
+			Usage:     "Key file for mutual TLS auth in PEM format",
+			Value:     &plugin.MTLSKeyFile,
+		},
+		{
+			Path:      "mtls-cert-file",
+			Env:       "",
+			Argument:  "mtls-cert-file",
+			Shorthand: "C",
+			Default:   "",
+			Usage:     "Certificate file for mutual TLS auth in PEM format",
+			Value:     &plugin.MTLSCertFile,
+		},
 	}
 )
 
@@ -152,6 +172,17 @@ func checkArgs(event *types.Event) (int, error) {
 	tlsConfig.InsecureSkipVerify = plugin.InsecureSkipVerify
 
 	tlsConfig.CipherSuites = corev2.DefaultCipherSuites
+
+	if (len(plugin.MTLSKeyFile) > 0 && len(plugin.MTLSCertFile) == 0) || (len(plugin.MTLSCertFile) > 0 && len(plugin.MTLSKeyFile) == 0) {
+		return sensu.CheckStateWarning, fmt.Errorf("mTLS auth requires both --mtls-key-file and --mtls-cert-file")
+	}
+	if len(plugin.MTLSKeyFile) > 0 && len(plugin.MTLSCertFile) > 0 {
+		cert, err := tls.LoadX509KeyPair(plugin.MTLSCertFile, plugin.MTLSKeyFile)
+		if err != nil {
+			return sensu.CheckStateWarning, fmt.Errorf("Failed to load mTLS key pair %s/%s: %v", plugin.MTLSCertFile, plugin.MTLSKeyFile, err)
+		}
+		tlsConfig.Certificates = []tls.Certificate{cert}
+	}
 
 	return sensu.CheckStateOK, nil
 }
