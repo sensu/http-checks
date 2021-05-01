@@ -7,6 +7,7 @@
 cmd/http-check/http-check
 cmd/http-perf/http-perf
 cmd/http-json/http-json
+cmd/http-endpoints-check/http-endpoints-check
 
 # Test binary, build with `go test -c`
 *.test

@@ -1,4 +1,4 @@
-module github.com/nixwiz/http-checks
+module github.com/sensu/http-checks
 
 go 1.13
 
@@ -9,6 +9,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/uuid v1.1.5 // indirect
+	github.com/hashicorp/go-multierror v1.0.0
 	github.com/itchyny/gojq v0.12.1
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/magiconair/properties v1.8.4 // indirect
