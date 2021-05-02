@@ -462,8 +462,8 @@ func executeCheck(event *types.Event) (int, error) {
 			overallError = multierror.Append(overallError, endpoint.Error)
 		}
 		if (!plugin.SuppressOKOutput && endpoint.Status == 0) || endpoint.Status > 0 {
-			fmt.Printf("Entity: %s URL: %s Status: %v Output: %v\n",
-				endpoint.EntityName, endpoint.URL, endpoint.Status, endpoint.StatusMsg)
+			fmt.Printf("URL: %s Status: %v Output: %v\n",
+				endpoint.URL, endpoint.Status, endpoint.StatusMsg)
 		}
 	}
 	return overallStatus, overallError
@@ -524,7 +524,11 @@ func (e *Endpoint) generateEvent() error {
 	//fmt.Println(string(eventJSON))
 	if plugin.DryRun {
 		fmt.Printf("URL: %s\n", e.URL)
-		fmt.Printf("  Post to API: %s\n  Event Data: %s\n", e.EventsAPI, string(eventJSON))
+		fmt.Printf("  Entity Name: %s\n", event.Entity.Name)
+		fmt.Printf("  Check Name: %s\n", event.Check.Name)
+		fmt.Printf("  Check Status: %v\n", event.Check.Status)
+		fmt.Printf("  Check Output: %s\n", event.Check.Output)
+		fmt.Printf("  Event API: %s\n  Event Data: %s\n", e.EventsAPI, string(eventJSON))
 	} else {
 		_, err = http.Post(e.EventsAPI, "application/json", bytes.NewBuffer(eventJSON))
 		if err != nil {
