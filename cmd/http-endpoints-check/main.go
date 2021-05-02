@@ -35,7 +35,7 @@ type Endpoint struct {
 	InsecureSkipVerify bool     `json:"insecure-skip-verify"`
 	CreateEvent        bool     `json:"create-event"`
 	EntityName         string   `json:"event-entity-name"`
-	CheckName          string   `json:"event-entity-name"`
+	CheckName          string   `json:"event-check-name"`
 	Handlers           []string `json:"event-handlers"`
 	EventsAPI          string   `json:"events-api"`
 	Error              error
@@ -400,7 +400,6 @@ func executeCheck(event *types.Event) (int, error) {
 			endpoints[e].StatusMsg = fmt.Sprintf(
 				"%s CRITICAL: HTTP Status %v for %s\n",
 				plugin.PluginConfig.Name, resp.StatusCode, endpoint.URL)
-			break
 		// resp.StatusCode will ultimately be 200 for successful redirects
 		// so instead we check to see if the current URL matches the requested
 		// URL
@@ -410,7 +409,6 @@ func executeCheck(event *types.Event) (int, error) {
 			endpoints[e].StatusMsg = fmt.Sprintf(
 				"%s OK: HTTP Status %v for %s (redirect from %s)\n",
 				plugin.PluginConfig.Name, resp.StatusCode, resp.Request.URL, endpoint.URL)
-			break
 		// But, if we've disabled redirects, this should work
 		case resp.StatusCode >= http.StatusMultipleChoices:
 			var extra string
@@ -423,21 +421,18 @@ func executeCheck(event *types.Event) (int, error) {
 			endpoints[e].StatusMsg = fmt.Sprintf(
 				"%s WARNING: HTTP Status %v for %s %s\n",
 				plugin.PluginConfig.Name, resp.StatusCode, endpoint.URL, extra)
-			break
 		case resp.StatusCode == -1:
 			endpoints[e].Error = nil
 			endpoints[e].Status = sensu.CheckStateUnknown
 			endpoints[e].StatusMsg = fmt.Sprintf(
 				"%s UNKNOWN: HTTP Status %v for %s\n",
 				plugin.PluginConfig.Name, resp.StatusCode, endpoint.URL)
-			break
 		default:
 			endpoints[e].Error = nil
 			endpoints[e].Status = sensu.CheckStateOK
 			endpoints[e].StatusMsg = fmt.Sprintf(
 				"%s OK: HTTP Status %v for %s\n",
 				plugin.PluginConfig.Name, resp.StatusCode, endpoint.URL)
-			break
 		}
 	}
 	overallStatus := 0
