@@ -12,6 +12,7 @@
   - [http-check](#http-check)
   - [http-perf](#http-perf)
   - [http-json](#http-json)
+  - [http-endpoints-check](#http-endpoints-check)
 - [Configuration](#configuration)
   - [Asset registration](#asset-registration)
   - [Check definitions](#check-definition)
@@ -230,6 +231,87 @@ http-json OK:  The value 200 found at .status matched with expression "< 300" an
 
 * Headers should be in the form of "Header-Name: Header value".
 
+### http-endpoints-check
+
+#### Help output
+
+```
+HTTP Status/String Check for multiple endpoints
+
+Usage:
+  http-check [flags]
+  http-check [command]
+
+Available Commands:
+  help        Help about any command
+  version     Print the version number of this plugin
+
+Flags:
+      --create-event               Create event for url, can be overridden by endpoint json attribute of same name
+  -n, --dry-run                    Do not actually create events. Output http requests that would have created events instead.
+  -e, --endpoints string           An array of http endpoints to check.
+      --event-check-name string    Check name to use in generated event, can be overridden by endpoint json attribute of same name
+      --event-entity-name string   Entity name to use in generated event, can be overridden by endpoint json attribute of same name
+      --event-handlers strings     Comma separated list of handlers to use in generated event, can be overridden by endpoint json attribute of same name
+      --events-api string          Events API endpoint to use when generating events, can be overridden by endpoint json attribute of same name (default "http://localhost:3031/events")
+  -H, --header strings             Additional header(s) to send in check request, can be overridden by endpoint json attribute of same name
+  -i, --insecure-skip-verify       Skip TLS certificate verification (not recommended!), can be overridden by endpoint json attribute of same name
+  -C, --mtls-cert-file string      Certificate file for mutual TLS auth in PEM format, can be overridden by endpoint json attribute of same name
+  -K, --mtls-key-file string       Key file for mutual TLS auth in PEM format, can be overridden by endpoint json attribute of same name
+  -r, --redirect-ok                Allow redirects, can be overridden by endpoint json attribute of same name
+  -s, --search-string string       String to search for, if not provided do status check only, can be overridden by endpoint json attribute of same name
+  -S, --suppress-ok-output         Aside from overall status, only output failures
+  -T, --timeout int                Request timeout in seconds, can be overridden by endpoint json attribute of same name (default 15)
+  -t, --trusted-ca-file string     TLS CA certificate bundle in PEM format, can be overridden by endpoint json attribute of same name
+  -u, --url string                 URL to test, can be overridden by endpoint json attribute of same name (default "http://localhost:80/")
+  -h, --help                       help for http-check
+
+```
+
+#### Example(s)
+
+```
+http-endpoints-check --url https://sensu.io --search-string Monitoring
+URL: https://sensu.io Status: 0 Output: http-check OK: found "Monitoring" at https://sensu.io
+
+./http-endpoints-check --url https://sensu.io --search-string Monitoring --create-event --dry-run
+
+Dry-run:: Events requested:
+URL: https://sensu.io
+  Entity Name: sensu.io
+  Check Name: http_check-root_path
+  Check Status: 0
+  Check Output: http-check OK: found "Monitoring" at https://sensu.io
+
+  Event API: http://localhost:3031/events
+  Event Data: {"entity":{"entity_class":"","system":{"network":{"interfaces":null},"libc_type":"","vm_system":"","vm_role":"","cloud_provider":"","processes":null},"subscriptions":null,"last_seen":0,"deregister":false,"deregistration":{},"metadata":{"name":"sensu.io"},"sensu_agent_version":""},"check":{"handlers":[],"high_flap_threshold":0,"interval":0,"low_flap_threshold":0,"publish":false,"runtime_assets":null,"subscriptions":[],"proxy_entity_name":"","check_hooks":null,"stdin":false,"subdue":null,"ttl":0,"timeout":0,"round_robin":false,"executed":0,"history":null,"issued":0,"output":"http-check OK: found \"Monitoring\" at https://sensu.io\n","status":0,"total_state_change":0,"last_ok":0,"occurrences":0,"occurrences_watermark":0,"output_metric_format":"","output_metric_handlers":null,"env_vars":null,"metadata":{"name":"http_check-root_path"},"secrets":null,"is_silenced":false,"scheduler":""},"metadata":{},"id":null,"sequence":0}
+
+Dry-run:: Normal Output:
+URL: https://sensu.io Status: 0 Output: http-check OK: found "Monitoring" at https://sensu.io
+
+http-endpoints-check --endpoints '[{"url" : "https://sensu.io", "search-string" : "droids", "create-event": true }]' --dry-run
+
+Dry-run:: Events requested:
+URL: https://sensu.io
+  Entity Name: sensu.io
+  Check Name: http_check-root_path
+  Check Status: 2
+  Check Output: http-check CRITICAL: "droids" not found at https://sensu.io
+
+  Event API: http://localhost:3031/events
+  Event Data: {"entity":{"entity_class":"","system":{"network":{"interfaces":null},"libc_type":"","vm_system":"","vm_role":"","cloud_provider":"","processes":null},"subscriptions":null,"last_seen":0,"deregister":false,"deregistration":{},"metadata":{"name":"sensu.io"},"sensu_agent_version":""},"check":{"handlers":[],"high_flap_threshold":0,"interval":0,"low_flap_threshold":0,"publish":false,"runtime_assets":null,"subscriptions":[],"proxy_entity_name":"","check_hooks":null,"stdin":false,"subdue":null,"ttl":0,"timeout":0,"round_robin":false,"executed":0,"history":null,"issued":0,"output":"http-check CRITICAL: \"droids\" not found at https://sensu.io\n","status":2,"total_state_change":0,"last_ok":0,"occurrences":0,"occurrences_watermark":0,"output_metric_format":"","output_metric_handlers":null,"env_vars":null,"metadata":{"name":"http_check-root_path"},"secrets":null,"is_silenced":false,"scheduler":""},"metadata":{},"id":null,"sequence":0}
+
+Dry-run:: Normal Output:
+URL: https://sensu.io Status: 2 Output: http-check CRITICAL: "droids" not found at https://sensu.io
+
+```
+
+#### Note(s)
+
+* When using `--redirect-ok` it affects both the string search and status checkfunctionality.
+  - For a string search, if true, it searches for the string in the eventual destination. 
+  - For a status check, if false, receiving a redirect will return a `warning` status.  If true, it will return an `ok` status.
+* Headers should be in the form of "Header-Name: Header value".
 ## Configuration
 
 ### Asset registration
@@ -294,6 +376,23 @@ metadata:
   namespace: default
 spec:
   command: http-json --url https://icanhazdadjoke.com/j/HeaFdiyIJe --path id --expression "== \"HeaFdiyIJe\""
+  subscriptions:
+  - system
+  runtime_assets:
+  - sensu/http-checks
+```
+
+#### http-endpoints-check
+
+```yml
+---
+type: CheckConfig
+api_version: core/v2
+metadata:
+  name: http-endpoints-check
+  namespace: default
+spec:
+  command: http-endpoints-check --endpoints '[{"url":"http://example.com/first/path","create-event": true}, {"url":"http://example.com/second/path", "create-event": true}]'
   subscriptions:
   - system
   runtime_assets:

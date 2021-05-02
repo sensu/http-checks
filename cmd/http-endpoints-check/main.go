@@ -71,7 +71,7 @@ var (
 	plugin    = Config{
 		PluginConfig: sensu.PluginConfig{
 			Name:     "http-check",
-			Short:    "HTTP Status/String Check",
+			Short:    "HTTP Status/String Check for multiple endpoints",
 			Keyspace: "sensu.io/plugins/http-check/config",
 		},
 	}
