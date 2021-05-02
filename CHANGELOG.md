@@ -7,6 +7,9 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Added
+- Added http-endpoints-check binary. This command is able to generate separate events for multiple urls.
+
 ## [0.4.0] - 2021-01-21
 
 ### Added
