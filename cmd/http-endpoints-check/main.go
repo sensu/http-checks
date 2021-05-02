@@ -48,6 +48,7 @@ type Config struct {
 	sensu.PluginConfig
 	Endpoints          string
 	SuppressOKOutput   bool
+	DryRun             bool
 	URL                string
 	SearchString       string
 	TrustedCAFile      string
@@ -86,12 +87,21 @@ var (
 			Value:     &plugin.Endpoints,
 		},
 		{
+			Path:      "dry-run",
+			Env:       "",
+			Argument:  "dry-run",
+			Shorthand: "n",
+			Default:   false,
+			Usage:     `Do not actually create events. Output http requests that would have created events instead.`,
+			Value:     &plugin.DryRun,
+		},
+		{
 			Path:      "suppress-ok-output",
 			Env:       "",
 			Argument:  "suppress-ok-output",
 			Shorthand: "S",
 			Default:   false,
-			Usage:     "Aside from overal status, only output failures",
+			Usage:     "Aside from overall status, only output failures",
 			Value:     &plugin.SuppressOKOutput,
 		},
 
@@ -283,7 +293,6 @@ func checkArgs(event *types.Event) (int, error) {
 func executeCheck(event *types.Event) (int, error) {
 	client := http.DefaultClient
 	for e, endpoint := range endpoints {
-		fmt.Printf("Search String: %v\n", endpoint.SearchString)
 		client.Transport = http.DefaultTransport
 		client.Timeout = time.Duration(endpoint.Timeout) * time.Second
 		if !endpoint.RedirectOK {
@@ -391,7 +400,6 @@ func executeCheck(event *types.Event) (int, error) {
 			endpoints[e].StatusMsg = fmt.Sprintf(
 				"%s CRITICAL: HTTP Status %v for %s\n",
 				plugin.PluginConfig.Name, resp.StatusCode, endpoint.URL)
-			fmt.Printf("Status: %v Msg: %v Err: %v\n", endpoint.Status, endpoint.StatusMsg, endpoint.Error)
 			break
 		// resp.StatusCode will ultimately be 200 for successful redirects
 		// so instead we check to see if the current URL matches the requested
@@ -433,6 +441,9 @@ func executeCheck(event *types.Event) (int, error) {
 		}
 	}
 	overallStatus := 0
+	if plugin.DryRun {
+		fmt.Printf("\nDry-run:: Events requested:\n")
+	}
 	for e, endpoint := range endpoints {
 		if endpoint.Error == nil && endpoint.CreateEvent {
 			endpoints[e].Error = endpoint.generateEvent()
@@ -442,14 +453,17 @@ func executeCheck(event *types.Event) (int, error) {
 			}
 		}
 	}
+	if plugin.DryRun {
+		fmt.Printf("\nDry-run:: Normal Output:\n")
+	}
 	var overallError error
 	for _, endpoint := range endpoints {
 		if endpoint.Error != nil {
 			overallError = multierror.Append(overallError, endpoint.Error)
 		}
 		if (!plugin.SuppressOKOutput && endpoint.Status == 0) || endpoint.Status > 0 {
-			fmt.Printf("Entity: %s URL: %s Status: %v Msg: %v Err: %v\n",
-				endpoint.EntityName, endpoint.URL, endpoint.Status, endpoint.StatusMsg, endpoint.Error)
+			fmt.Printf("Entity: %s URL: %s Status: %v Output: %v\n",
+				endpoint.EntityName, endpoint.URL, endpoint.Status, endpoint.StatusMsg)
 		}
 	}
 	return overallStatus, overallError
@@ -507,11 +521,16 @@ func (e *Endpoint) generateEvent() error {
 		fmt.Printf("Create event failed with error %s\n", err)
 		return err
 	}
-	fmt.Println(string(eventJSON))
-	_, err = http.Post(e.EventsAPI, "application/json", bytes.NewBuffer(eventJSON))
-	if err != nil {
-		fmt.Printf("The HTTP request to create event failed with error %s\n", err)
-		return err
+	//fmt.Println(string(eventJSON))
+	if plugin.DryRun {
+		fmt.Printf("URL: %s\n", e.URL)
+		fmt.Printf("  Post to API: %s\n  Event Data: %s\n", e.EventsAPI, string(eventJSON))
+	} else {
+		_, err = http.Post(e.EventsAPI, "application/json", bytes.NewBuffer(eventJSON))
+		if err != nil {
+			fmt.Printf("The HTTP request to create event failed with error %s\n", err)
+			return err
+		}
 	}
 	return nil
 }
