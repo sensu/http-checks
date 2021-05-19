@@ -15,6 +15,40 @@ import (
 func TestMain(t *testing.T) {
 }
 
+/*
+func TestWorkingDirectory(t *testing.T) {
+	wd, _ := os.Getwd()
+	t.Log(wd)
+}
+*/
+
+func TestReadEndpointsFile(t *testing.T) {
+	testCases := []struct {
+		filename        string
+		expected_status int
+		expect_error    bool
+	}{
+		{"testdata/endpoints.json", sensu.CheckStateOK, false},
+		{"testdata/missing_endpoints.json", sensu.CheckStateCritical, true},
+	}
+	for _, tc := range testCases {
+		event := corev2.FixtureEvent("entity1", "check")
+		assert := assert.New(t)
+		plugin.Endpoints = ""
+		plugin.EndpointsFile = tc.filename
+		status, err := checkArgs(event)
+		assert.Equal(tc.expected_status, status)
+		if tc.expect_error {
+			assert.Error(err)
+		} else {
+			assert.NoError(err)
+		}
+	}
+	plugin.EndpointsFile = ""
+	plugin.Endpoints = ""
+
+}
+
 func TestExecuteCheck(t *testing.T) {
 
 	testCasesStringSearch := []struct {
