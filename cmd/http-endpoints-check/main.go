@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/go-multierror"
@@ -290,169 +291,208 @@ func checkArgs(event *types.Event) (int, error) {
 	return sensu.CheckStateOK, nil
 }
 
-func executeCheck(event *types.Event) (int, error) {
+func checkEndpoint(endpoint *Endpoint, wg *sync.WaitGroup) {
+	defer wg.Done()
+	if plugin.DryRun {
+		fmt.Printf("  Checking Endpoint: %s\n", endpoint.URL)
+	}
 	client := http.DefaultClient
-	for e, endpoint := range endpoints {
-		client.Transport = http.DefaultTransport
-		client.Timeout = time.Duration(endpoint.Timeout) * time.Second
-		if !endpoint.RedirectOK {
-			client.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }
-		}
+	client.Transport = http.DefaultTransport
+	client.Timeout = time.Duration(endpoint.Timeout) * time.Second
+	if !endpoint.RedirectOK {
+		client.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }
+	}
 
-		checkURL, err := url.Parse(endpoint.URL)
-		if len(endpoint.EntityName) == 0 {
-			endpoints[e].EntityName = checkURL.Host
-		}
-		if len(endpoint.CheckName) == 0 {
-			// Make a Regex to say we only want letters and numbers
-			reg, err := regexp.Compile("[^a-zA-Z0-9]+")
-			if err != nil {
-				break
-			}
-			processedString := reg.ReplaceAllString(checkURL.Path, "_")
-			if len(processedString) == 0 {
-				processedString = "root_path"
-			}
-			endpoints[e].CheckName = fmt.Sprintf("http_check-%s", processedString)
-		}
+	checkURL, err := url.Parse(endpoint.URL)
+	if len(endpoint.EntityName) == 0 {
+		endpoint.EntityName = checkURL.Host
+	}
+	if len(endpoint.CheckName) == 0 {
+		// Make a Regex to say we only want letters and numbers
+		reg, err := regexp.Compile("[^a-zA-Z0-9]+")
 		if err != nil {
-			endpoints[e].Error = err
-			endpoints[e].Status = sensu.CheckStateCritical
-			endpoints[e].StatusMsg = fmt.Sprintf(
-				"%s CRITICAL: error parsing URL\n",
-				plugin.PluginConfig.Name)
-			break
+			return
 		}
-		if checkURL.Scheme == "https" {
-			client.Transport.(*http.Transport).TLSClientConfig = &tlsConfig
+		processedString := reg.ReplaceAllString(checkURL.Path, "_")
+		if len(processedString) == 0 {
+			processedString = "root_path"
 		}
+		endpoint.CheckName = fmt.Sprintf("http_check-%s", processedString)
+	}
+	if err != nil {
+		endpoint.Error = err
+		endpoint.Status = sensu.CheckStateCritical
+		endpoint.StatusMsg = fmt.Sprintf(
+			"%s CRITICAL: error parsing URL\n",
+			plugin.PluginConfig.Name)
+		return
+	}
+	if checkURL.Scheme == "https" {
+		client.Transport.(*http.Transport).TLSClientConfig = &tlsConfig
+	}
 
-		req, err := http.NewRequest("GET", endpoint.URL, nil)
-		if err != nil {
-			endpoints[e].Error = err
-			endpoints[e].Status = sensu.CheckStateCritical
-			endpoints[e].StatusMsg = fmt.Sprintf(
-				"%s CRITICAL: error creating request\n",
-				plugin.PluginConfig.Name)
-			break
-		}
+	req, err := http.NewRequest("GET", endpoint.URL, nil)
+	if err != nil {
+		endpoint.Error = err
+		endpoint.Status = sensu.CheckStateCritical
+		endpoint.StatusMsg = fmt.Sprintf(
+			"%s CRITICAL: error creating request\n",
+			plugin.PluginConfig.Name)
+		return
+	}
 
-		if len(endpoint.Headers) > 0 {
-			for _, header := range endpoint.Headers {
-				headerSplit := strings.SplitN(header, ":", 2)
-				req.Header.Set(strings.TrimSpace(headerSplit[0]), strings.TrimSpace(headerSplit[1]))
-			}
-		}
-
-		resp, err := client.Do(req)
-		if err != nil {
-			endpoints[e].Error = err
-			endpoints[e].Status = sensu.CheckStateCritical
-			endpoints[e].StatusMsg = fmt.Sprintf(
-				"%s CRITICAL: error making request\n",
-				plugin.PluginConfig.Name)
-			break
-		}
-		defer resp.Body.Close()
-
-		if err != nil {
-			endpoints[e].Error = err
-			endpoints[e].Status = sensu.CheckStateCritical
-			endpoints[e].StatusMsg = "critical"
-			endpoints[e].StatusMsg = fmt.Sprintf(
-				"%s CRITICAL: error making request\n",
-				plugin.PluginConfig.Name)
-			break
-		}
-
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			endpoints[e].Error = err
-			endpoints[e].Status = sensu.CheckStateCritical
-			endpoints[e].StatusMsg = "critical"
-			endpoints[e].StatusMsg = fmt.Sprintf(
-				"%s CRITICAL: error reading body\n",
-				plugin.PluginConfig.Name)
-			break
-		}
-
-		if len(endpoint.SearchString) > 0 {
-			if strings.Contains(string(body), endpoint.SearchString) {
-				endpoints[e].Error = nil
-				endpoints[e].Status = sensu.CheckStateOK
-				endpoints[e].StatusMsg = fmt.Sprintf(
-					"%s OK: found \"%s\" at %s\n",
-					plugin.PluginConfig.Name, endpoint.SearchString, resp.Request.URL)
-				break
-			}
-			endpoints[e].Error = nil
-			endpoints[e].Status = sensu.CheckStateCritical
-			endpoints[e].StatusMsg = fmt.Sprintf(
-				"%s CRITICAL: \"%s\" not found at %s\n",
-				plugin.PluginConfig.Name, endpoint.SearchString, resp.Request.URL)
-			break
-		}
-
-		switch {
-		case resp.StatusCode >= http.StatusBadRequest:
-			endpoints[e].Error = nil
-			endpoints[e].Status = sensu.CheckStateCritical
-			endpoints[e].StatusMsg = fmt.Sprintf(
-				"%s CRITICAL: HTTP Status %v for %s\n",
-				plugin.PluginConfig.Name, resp.StatusCode, endpoint.URL)
-		// resp.StatusCode will ultimately be 200 for successful redirects
-		// so instead we check to see if the current URL matches the requested
-		// URL
-		case resp.Request.URL.String() != endpoint.URL && endpoint.RedirectOK:
-			endpoints[e].Error = nil
-			endpoints[e].Status = sensu.CheckStateOK
-			endpoints[e].StatusMsg = fmt.Sprintf(
-				"%s OK: HTTP Status %v for %s (redirect from %s)\n",
-				plugin.PluginConfig.Name, resp.StatusCode, resp.Request.URL, endpoint.URL)
-		// But, if we've disabled redirects, this should work
-		case resp.StatusCode >= http.StatusMultipleChoices:
-			var extra string
-			redirectURL := resp.Header.Get("Location")
-			if len(redirectURL) > 0 {
-				extra = fmt.Sprintf(" (redirects to %s)", redirectURL)
-			}
-			endpoints[e].Error = nil
-			endpoints[e].Status = sensu.CheckStateWarning
-			endpoints[e].StatusMsg = fmt.Sprintf(
-				"%s WARNING: HTTP Status %v for %s %s\n",
-				plugin.PluginConfig.Name, resp.StatusCode, endpoint.URL, extra)
-		case resp.StatusCode == -1:
-			endpoints[e].Error = nil
-			endpoints[e].Status = sensu.CheckStateUnknown
-			endpoints[e].StatusMsg = fmt.Sprintf(
-				"%s UNKNOWN: HTTP Status %v for %s\n",
-				plugin.PluginConfig.Name, resp.StatusCode, endpoint.URL)
-		default:
-			endpoints[e].Error = nil
-			endpoints[e].Status = sensu.CheckStateOK
-			endpoints[e].StatusMsg = fmt.Sprintf(
-				"%s OK: HTTP Status %v for %s\n",
-				plugin.PluginConfig.Name, resp.StatusCode, endpoint.URL)
+	if len(endpoint.Headers) > 0 {
+		for _, header := range endpoint.Headers {
+			headerSplit := strings.SplitN(header, ":", 2)
+			req.Header.Set(strings.TrimSpace(headerSplit[0]), strings.TrimSpace(headerSplit[1]))
 		}
 	}
-	overallStatus := 0
+
+	resp, err := client.Do(req)
+	if err != nil {
+		endpoint.Error = err
+		endpoint.Status = sensu.CheckStateCritical
+		endpoint.StatusMsg = fmt.Sprintf(
+			"%s CRITICAL: error making request\n",
+			plugin.PluginConfig.Name)
+		return
+	}
+	defer resp.Body.Close()
+
+	if err != nil {
+		endpoint.Error = err
+		endpoint.Status = sensu.CheckStateCritical
+		endpoint.StatusMsg = "critical"
+		endpoint.StatusMsg = fmt.Sprintf(
+			"%s CRITICAL: error making request\n",
+			plugin.PluginConfig.Name)
+		return
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		endpoint.Error = err
+		endpoint.Status = sensu.CheckStateCritical
+		endpoint.StatusMsg = "critical"
+		endpoint.StatusMsg = fmt.Sprintf(
+			"%s CRITICAL: error reading body\n",
+			plugin.PluginConfig.Name)
+		return
+	}
+
+	if len(endpoint.SearchString) > 0 {
+		if strings.Contains(string(body), endpoint.SearchString) {
+			endpoint.Error = nil
+			endpoint.Status = sensu.CheckStateOK
+			endpoint.StatusMsg = fmt.Sprintf(
+				"%s OK: found \"%s\" at %s\n",
+				plugin.PluginConfig.Name, endpoint.SearchString, resp.Request.URL)
+			return
+		}
+		endpoint.Error = nil
+		endpoint.Status = sensu.CheckStateCritical
+		endpoint.StatusMsg = fmt.Sprintf(
+			"%s CRITICAL: \"%s\" not found at %s\n",
+			plugin.PluginConfig.Name, endpoint.SearchString, resp.Request.URL)
+		return
+	}
+
+	switch {
+	case resp.StatusCode >= http.StatusBadRequest:
+		endpoint.Error = nil
+		endpoint.Status = sensu.CheckStateCritical
+		endpoint.StatusMsg = fmt.Sprintf(
+			"%s CRITICAL: HTTP Status %v for %s\n",
+			plugin.PluginConfig.Name, resp.StatusCode, endpoint.URL)
+	// resp.StatusCode will ultimately be 200 for successful redirects
+	// so instead we check to see if the current URL matches the requested
+	// URL
+	case resp.Request.URL.String() != endpoint.URL && endpoint.RedirectOK:
+		endpoint.Error = nil
+		endpoint.Status = sensu.CheckStateOK
+		endpoint.StatusMsg = fmt.Sprintf(
+			"%s OK: HTTP Status %v for %s (redirect from %s)\n",
+			plugin.PluginConfig.Name, resp.StatusCode, resp.Request.URL, endpoint.URL)
+	// But, if we've disabled redirects, this should work
+	case resp.StatusCode >= http.StatusMultipleChoices:
+		var extra string
+		redirectURL := resp.Header.Get("Location")
+		if len(redirectURL) > 0 {
+			extra = fmt.Sprintf(" (redirects to %s)", redirectURL)
+		}
+		endpoint.Error = nil
+		endpoint.Status = sensu.CheckStateWarning
+		endpoint.StatusMsg = fmt.Sprintf(
+			"%s WARNING: HTTP Status %v for %s %s\n",
+			plugin.PluginConfig.Name, resp.StatusCode, endpoint.URL, extra)
+	case resp.StatusCode == -1:
+		endpoint.Error = nil
+		endpoint.Status = sensu.CheckStateUnknown
+		endpoint.StatusMsg = fmt.Sprintf(
+			"%s UNKNOWN: HTTP Status %v for %s\n",
+			plugin.PluginConfig.Name, resp.StatusCode, endpoint.URL)
+	default:
+		endpoint.Error = nil
+		endpoint.Status = sensu.CheckStateOK
+		endpoint.StatusMsg = fmt.Sprintf(
+			"%s OK: HTTP Status %v for %s\n",
+			plugin.PluginConfig.Name, resp.StatusCode, endpoint.URL)
+	}
+
+	if plugin.DryRun {
+		fmt.Printf("  Done Checking Endpoint: %s\n", endpoint.URL)
+	}
+}
+
+func createEvent(endpoint *Endpoint, wg *sync.WaitGroup) {
+	defer wg.Done()
+	if endpoint.Error == nil && endpoint.CreateEvent {
+		endpoint.Error = endpoint.generateEvent()
+	}
+}
+
+func executeCheck(event *types.Event) (int, error) {
+	var wg sync.WaitGroup
+
+	// Check urls in parallel
+	if plugin.DryRun {
+		fmt.Printf("Dry-run:: Waiting for all checks to complete\n")
+	}
+	for e, _ := range endpoints {
+		wg.Add(1)
+		go checkEndpoint(&endpoints[e], &wg)
+	}
+	wg.Wait()
+	if plugin.DryRun {
+		fmt.Printf("Dry-run:: Checks completed\n")
+	}
 	if plugin.DryRun {
 		fmt.Printf("\nDry-run:: Events requested:\n")
 	}
-	for e, endpoint := range endpoints {
-		if endpoint.Error == nil && endpoint.CreateEvent {
-			endpoints[e].Error = endpoint.generateEvent()
-		} else {
-			if overallStatus < endpoint.Status {
-				overallStatus = endpoint.Status
-			}
-		}
+
+	//Generate requested events in parallel
+	if plugin.DryRun {
+		fmt.Printf("Dry-run:: Waiting for all events to be created\n")
 	}
+	for e, _ := range endpoints {
+		wg.Add(1)
+		go createEvent(&endpoints[e], &wg)
+	}
+	wg.Wait()
+	if plugin.DryRun {
+		fmt.Printf("Dry-run:: Events created\n")
+	}
+
 	if plugin.DryRun {
 		fmt.Printf("\nDry-run:: Normal Output:\n")
 	}
+
 	var overallError error
+	overallStatus := 0
 	for _, endpoint := range endpoints {
+		if overallStatus < endpoint.Status {
+			overallStatus = endpoint.Status
+		}
 		if endpoint.Error != nil {
 			overallError = multierror.Append(overallError, endpoint.Error)
 		}
