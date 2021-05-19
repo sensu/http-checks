@@ -72,9 +72,9 @@ var (
 	tlsConfig tls.Config
 	plugin    = Config{
 		PluginConfig: sensu.PluginConfig{
-			Name:     "http-check",
+			Name:     "http-endpoints-check",
 			Short:    "HTTP Status/String Check for multiple endpoints",
-			Keyspace: "sensu.io/plugins/http-check/config",
+			Keyspace: "sensu.io/plugins/http-endpoints-check/config",
 		},
 	}
 
@@ -85,7 +85,7 @@ var (
 			Argument:  "endpoints",
 			Shorthand: "e",
 			Default:   "",
-			Usage:     `An array of http endpoints to check.`,
+			Usage:     `A JSON array of http endpoints to check. Conficts with --endpoints-file.`,
 			Value:     &plugin.Endpoints,
 		},
 		{
@@ -94,7 +94,7 @@ var (
 			Argument:  "endpoints-file",
 			Shorthand: "f",
 			Default:   "",
-			Usage:     `JSON file corresponding to array of http endpoints to check.`,
+			Usage:     `File holding a JSON array of http endpoints to check. Conflicts with --endpoints.`,
 			Value:     &plugin.EndpointsFile,
 		},
 		{

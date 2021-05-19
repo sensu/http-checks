@@ -239,8 +239,8 @@ http-json OK:  The value 200 found at .status matched with expression "< 300" an
 HTTP Status/String Check for multiple endpoints
 
 Usage:
-  http-check [flags]
-  http-check [command]
+  http-endpoints-check [flags]
+  http-endpoints-check [command]
 
 Available Commands:
   help        Help about any command
@@ -249,7 +249,8 @@ Available Commands:
 Flags:
       --create-event               Create event for url, can be overridden by endpoint json attribute of same name
   -n, --dry-run                    Do not actually create events. Output http requests that would have created events instead.
-  -e, --endpoints string           An array of http endpoints to check.
+  -e, --endpoints string           A JSON array of http endpoints to check. Conficts with --endpoints-file.
+  -f, --endpoints-file string      File holding a JSON array of http endpoints to check. Conflicts with --endpoints.
       --event-check-name string    Check name to use in generated event, can be overridden by endpoint json attribute of same name
       --event-entity-name string   Entity name to use in generated event, can be overridden by endpoint json attribute of same name
       --event-handlers strings     Comma separated list of handlers to use in generated event, can be overridden by endpoint json attribute of same name
@@ -265,7 +266,6 @@ Flags:
   -t, --trusted-ca-file string     TLS CA certificate bundle in PEM format, can be overridden by endpoint json attribute of same name
   -u, --url string                 URL to test, can be overridden by endpoint json attribute of same name (default "http://localhost:80/")
   -h, --help                       help for http-check
-
 ```
 
 #### Example(s)
