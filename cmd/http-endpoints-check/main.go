@@ -478,7 +478,7 @@ func executeCheck(event *types.Event) (int, error) {
 	if plugin.DryRun {
 		fmt.Printf("Dry-run:: Waiting for all checks to complete\n")
 	}
-	for e, _ := range endpoints {
+	for e := range endpoints {
 		wg.Add(1)
 		go checkEndpoint(&endpoints[e], &wg)
 	}
@@ -494,7 +494,7 @@ func executeCheck(event *types.Event) (int, error) {
 	if plugin.DryRun {
 		fmt.Printf("Dry-run:: Waiting for all events to be created\n")
 	}
-	for e, _ := range endpoints {
+	for e := range endpoints {
 		wg.Add(1)
 		go createEvent(&endpoints[e], &wg)
 	}
