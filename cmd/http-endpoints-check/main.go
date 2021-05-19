@@ -48,6 +48,7 @@ type Endpoint struct {
 type Config struct {
 	sensu.PluginConfig
 	Endpoints          string
+	EndpointsFile      string
 	SuppressOKOutput   bool
 	DryRun             bool
 	URL                string
@@ -86,6 +87,15 @@ var (
 			Default:   "",
 			Usage:     `An array of http endpoints to check.`,
 			Value:     &plugin.Endpoints,
+		},
+		{
+			Path:      "endpoints-file",
+			Env:       "",
+			Argument:  "endpoints-file",
+			Shorthand: "f",
+			Default:   "",
+			Usage:     `JSON file corresponding to array of http endpoints to check.`,
+			Value:     &plugin.EndpointsFile,
 		},
 		{
 			Path:      "dry-run",
@@ -237,6 +247,16 @@ func main() {
 
 func checkArgs(event *types.Event) (int, error) {
 	var err error
+	if len(plugin.Endpoints) != 0 && len(plugin.EndpointsFile) != 0 {
+		return sensu.CheckStateUnknown, fmt.Errorf("conflicting arguments --endpoints and --endpoints-file both defined.")
+	}
+	if len(plugin.EndpointsFile) != 0 {
+		buf, err := ioutil.ReadFile(plugin.EndpointsFile)
+		if err != nil {
+			return sensu.CheckStateCritical, err
+		}
+		plugin.Endpoints = string(buf)
+	}
 	if len(plugin.Endpoints) == 0 {
 		endpoints, err = parseEndpoints(`[{}]`)
 		if err != nil {
