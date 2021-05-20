@@ -1,1 +1,15 @@
-[{"url":"https://sensu.io/"},{"url":"https://docs.sensu.io/"}]
+[
+	{
+		"event-check-name": "root_path",
+		"event-handlers": [
+			"handler1",
+			"handler2"
+		],
+		"url":"https://sensu.io/"
+	},
+	{
+		"create-event": true,
+		"event-check-name": "root_path",
+		"url":"https://docs.sensu.io/"
+	}
+]

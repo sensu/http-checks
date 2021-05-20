@@ -536,11 +536,14 @@ func parseEndpoints(endpointJSON string) ([]Endpoint, error) {
 
 // Set the defaults for endpoints
 func (e *Endpoint) UnmarshalJSON(data []byte) error {
+	handlers := []string{}
+	headers := []string{}
 	type endpointAlias Endpoint
+
 	endpoint := &endpointAlias{
 		URL:                plugin.URL,
 		SearchString:       plugin.SearchString,
-		Headers:            plugin.Headers,
+		Headers:            append(headers, plugin.Headers...),
 		RedirectOK:         plugin.RedirectOK,
 		Timeout:            plugin.Timeout,
 		MTLSKeyFile:        plugin.MTLSKeyFile,
@@ -551,12 +554,12 @@ func (e *Endpoint) UnmarshalJSON(data []byte) error {
 		EntityName:         plugin.EntityName,
 		CheckName:          plugin.CheckName,
 		EventsAPI:          plugin.EventsAPI,
-		Handlers:           plugin.Handlers,
+		Handlers:           append(handlers, plugin.Handlers...),
 	}
-
 	_ = json.Unmarshal(data, endpoint)
 
 	*e = Endpoint(*endpoint)
+
 	return nil
 }
 
@@ -583,6 +586,7 @@ func (e *Endpoint) generateEvent() error {
 		fmt.Printf("  Check Name: %s\n", event.Check.Name)
 		fmt.Printf("  Check Status: %v\n", event.Check.Status)
 		fmt.Printf("  Check Output: %s\n", event.Check.Output)
+		fmt.Printf("  Check Handlers: %s\n", event.Check.Handlers)
 		fmt.Printf("  Event API: %s\n  Event Data: %s\n", e.EventsAPI, string(eventJSON))
 	} else {
 		_, err = http.Post(e.EventsAPI, "application/json", bytes.NewBuffer(eventJSON))
