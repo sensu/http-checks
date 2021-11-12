@@ -186,7 +186,8 @@ func executeCheck(event *corev2.Event) (int, error) {
 
 	checkURL, err := url.Parse(plugin.URL)
 	if err != nil {
-		return sensu.CheckStateCritical, err
+		fmt.Printf("url parse error: %s\n", err)
+		return sensu.CheckStateCritical, nil
 	}
 	if checkURL.Scheme == "https" {
 		client.Transport.(*http.Transport).TLSClientConfig = &tlsConfig
@@ -194,7 +195,8 @@ func executeCheck(event *corev2.Event) (int, error) {
 
 	req, err := http.NewRequest("GET", plugin.URL, nil)
 	if err != nil {
-		return sensu.CheckStateCritical, err
+		fmt.Printf("request creation error: %s\n", err)
+		return sensu.CheckStateCritical, nil
 	}
 
 	req.Header.Set("Accept", "application/json")
@@ -207,34 +209,35 @@ func executeCheck(event *corev2.Event) (int, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return sensu.CheckStateCritical, err
+		fmt.Printf("request error: %s\n", err)
+		return sensu.CheckStateCritical, nil
 	}
 
 	defer resp.Body.Close()
 
-	if err != nil {
-		return sensu.CheckStateCritical, err
-	}
-
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return sensu.CheckStateCritical, err
+		fmt.Printf("read response body error: %s\n", err)
+		return sensu.CheckStateCritical, nil
 	}
 
 	query, err := gojq.Parse(plugin.Query)
 	if err != nil {
-		return sensu.CheckStateCritical, fmt.Errorf("Failed to parse query %q, error: %v", plugin.Query, err)
+		fmt.Printf("Failed to parse query %q, error: %v", plugin.Query, err)
+		return sensu.CheckStateCritical, nil
 	}
 	code, err := gojq.Compile(query)
 	if err != nil {
-		return sensu.CheckStateCritical, fmt.Errorf("Failed to compile query %q, error: %v", plugin.Query, err)
+		fmt.Printf("Failed to compile query %q, error: %v", plugin.Query, err)
+		return sensu.CheckStateCritical, nil
 	}
 
 	var jsonBody interface{}
 
 	err = json.Unmarshal(body, &jsonBody)
 	if err != nil {
-		return sensu.CheckStateCritical, fmt.Errorf("Could not unmarshal response body into JSON: %v", err)
+		fmt.Printf("Could not unmarshal response body into JSON: %v", err)
+		return sensu.CheckStateCritical, nil
 	}
 
 	iter := code.Run(jsonBody)

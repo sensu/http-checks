@@ -181,7 +181,8 @@ func executeCheck(event *types.Event) (int, error) {
 
 	checkURL, err := url.Parse(plugin.URL)
 	if err != nil {
-		return sensu.CheckStateCritical, err
+		fmt.Printf("url parse error: %s\n", err)
+		return sensu.CheckStateCritical, nil
 	}
 	if checkURL.Scheme == "https" {
 		client.Transport.(*http.Transport).TLSClientConfig = &tlsConfig
@@ -189,7 +190,8 @@ func executeCheck(event *types.Event) (int, error) {
 
 	req, err := http.NewRequest("GET", plugin.URL, nil)
 	if err != nil {
-		return sensu.CheckStateCritical, err
+		fmt.Printf("request creation error: %s\n", err)
+		return sensu.CheckStateCritical, nil
 	}
 
 	if len(plugin.Headers) > 0 {
@@ -201,18 +203,16 @@ func executeCheck(event *types.Event) (int, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return sensu.CheckStateCritical, err
+		fmt.Printf("request error: %s\n", err)
+		return sensu.CheckStateCritical, nil
 	}
 
 	defer resp.Body.Close()
 
-	if err != nil {
-		return sensu.CheckStateCritical, err
-	}
-
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return sensu.CheckStateCritical, err
+		fmt.Printf("response body read error: %s\n", err)
+		return sensu.CheckStateCritical, nil
 	}
 
 	if len(plugin.SearchString) > 0 {
