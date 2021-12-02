@@ -195,7 +195,8 @@ func executeCheck(event *types.Event) (int, error) {
 
 	checkURL, err := url.Parse(plugin.URL)
 	if err != nil {
-		return sensu.CheckStateCritical, err
+		fmt.Printf("url parse error: %s\n", err)
+		return sensu.CheckStateCritical, nil
 	}
 	if checkURL.Scheme == "https" {
 		client.Transport.(*http.Transport).TLSClientConfig = &tlsConfig
@@ -203,7 +204,8 @@ func executeCheck(event *types.Event) (int, error) {
 
 	req, err := http.NewRequest("GET", plugin.URL, nil)
 	if err != nil {
-		return sensu.CheckStateCritical, err
+		fmt.Printf("request creation error: %s\n", err)
+		return sensu.CheckStateCritical, nil
 	}
 	if len(plugin.Headers) > 0 {
 		for _, header := range plugin.Headers {
@@ -251,7 +253,8 @@ func executeCheck(event *types.Event) (int, error) {
 	start = time.Now()
 	resp, err := http.DefaultTransport.RoundTrip(req)
 	if err != nil {
-		return sensu.CheckStateCritical, err
+		fmt.Printf("request error: %s\n", err)
+		return sensu.CheckStateCritical, nil
 	}
 	totalRequestDuration = time.Since(start)
 
