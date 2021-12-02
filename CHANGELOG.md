@@ -7,6 +7,12 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [0.5.0] - 2021-12-01
+
+### Breaking Changes
+- Prevent output from including usage message unless the error is associated with argument validation.
+
+
 ## [0.4.0] - 2021-01-21
 
 ### Added
