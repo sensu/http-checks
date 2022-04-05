@@ -23,6 +23,7 @@ type Config struct {
 	sensu.PluginConfig
 	URL                string
 	SearchString       string
+	ResponseCode       int
 	TrustedCAFile      string
 	InsecureSkipVerify bool
 	RedirectOK         bool
@@ -61,6 +62,15 @@ var (
 			Default:   "",
 			Usage:     "String to search for, if not provided do status check only",
 			Value:     &plugin.SearchString,
+		},
+		{
+			Path:      "response-code",
+			Env:       "CHECK_RESPONSE_CODE",
+			Argument:  "response-code",
+			Shorthand: "R",
+			Default:   0,
+			Usage:     "Resposne Status Code to expect",
+			Value:     &plugin.ResponseCode,
 		},
 		{
 			Path:      "insecure-skip-verify",
@@ -172,7 +182,7 @@ func checkArgs(event *types.Event) (int, error) {
 
 func executeCheck(event *types.Event) (int, error) {
 
-	client := http.DefaultClient
+	client := &http.Client{}
 	client.Transport = http.DefaultTransport
 	client.Timeout = time.Duration(plugin.Timeout) * time.Second
 	if !plugin.RedirectOK {
@@ -206,7 +216,6 @@ func executeCheck(event *types.Event) (int, error) {
 		fmt.Printf("request error: %s\n", err)
 		return sensu.CheckStateCritical, nil
 	}
-
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -216,11 +225,19 @@ func executeCheck(event *types.Event) (int, error) {
 	}
 
 	if len(plugin.SearchString) > 0 {
-		if strings.Contains(string(body), plugin.SearchString) {
-			fmt.Printf("%s OK: found \"%s\" at %s\n", plugin.PluginConfig.Name, plugin.SearchString, resp.Request.URL)
+		state, msg := searchString(resp, body)
+		if state != sensu.CheckStateOK || plugin.ResponseCode == 0 {
+			fmt.Print(msg)
+			return state, nil
+		}
+	}
+
+	if plugin.ResponseCode != 0 {
+		if resp.StatusCode == plugin.ResponseCode {
+			fmt.Printf("%s OK: HTTP Status %v for %s\n", plugin.PluginConfig.Name, resp.StatusCode, resp.Request.URL)
 			return sensu.CheckStateOK, nil
 		}
-		fmt.Printf("%s CRITICAL: \"%s\" not found at %s\n", plugin.PluginConfig.Name, plugin.SearchString, resp.Request.URL)
+		fmt.Printf("%s CRITICAL: HTTP Status %v for %s. Expected %d\n", plugin.PluginConfig.Name, resp.StatusCode, plugin.URL, plugin.ResponseCode)
 		return sensu.CheckStateCritical, nil
 	}
 
@@ -250,4 +267,13 @@ func executeCheck(event *types.Event) (int, error) {
 		fmt.Printf("%s OK: HTTP Status %v for %s\n", plugin.PluginConfig.Name, resp.StatusCode, plugin.URL)
 		return sensu.CheckStateOK, nil
 	}
+}
+
+func searchString(resp *http.Response, body []byte) (int, string) {
+	if strings.Contains(string(body), plugin.SearchString) {
+		msg := fmt.Sprintf("%s OK: found \"%s\" at %s\n", plugin.PluginConfig.Name, plugin.SearchString, resp.Request.URL)
+		return sensu.CheckStateOK, msg
+	}
+	msg := fmt.Sprintf("%s CRITICAL: \"%s\" not found at %s\n", plugin.PluginConfig.Name, plugin.SearchString, resp.Request.URL)
+	return sensu.CheckStateCritical, msg
 }
