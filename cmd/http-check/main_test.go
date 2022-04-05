@@ -119,7 +119,7 @@ func TestExecuteCheck(t *testing.T) {
 				w.WriteHeader(http.StatusInternalServerError)
 			default:
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte("<h1>Success</h1>"))
+				_, _ = w.Write([]byte("<h1>Success</h1>"))
 			}
 		}))
 		defer testSrv.Close()
