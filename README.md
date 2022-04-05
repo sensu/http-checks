@@ -57,16 +57,17 @@ Available Commands:
   version     Print the version number of this plugin
 
 Flags:
-  -u, --url string               URL to test (default "http://localhost:80/")
-  -s, --search-string string     String to search for, if not provided do status check only
-  -r, --redirect-ok              Allow redirects
-  -T, --timeout int              Request timeout in seconds (default 15)
   -H, --header strings           Additional header(s) to send in check request
+  -h, --help                     help for http-check
+  -i, --insecure-skip-verify     Skip TLS certificate verification (not recommended!)
   -C, --mtls-cert-file string    Certificate file for mutual TLS auth in PEM format
   -K, --mtls-key-file string     Key file for mutual TLS auth in PEM format
+  -r, --redirect-ok              Allow redirects
+  -R, --response-code int        Resposne Status Code to expect
+  -s, --search-string string     String to search for, if not provided do status check only
+  -T, --timeout int              Request timeout in seconds (default 15)
   -t, --trusted-ca-file string   TLS CA certificate bundle in PEM format
-  -i, --insecure-skip-verify     Skip TLS certificate verification (not recommended!)
-  -h, --help                     help for http-check
+  -u, --url string               URL to test (default "http://localhost:80/")
 
 Use "http-check [command] --help" for more information about a command.
 ```
@@ -98,9 +99,11 @@ http-check OK: HTTP Status 200 for http://localhost:8000/health
 
 #### Note(s)
 
-* When using `--redirect-ok` it affects both the string search and status checkfunctionality.
+* When using `--redirect-ok` it affects both the string search and status check functionality.
   - For a string search, if true, it searches for the string in the eventual destination. 
-  - For a status check, if false, receiving a redirect will return a `warning` status.  If true, it will return an `ok` status.
+  - When the `--response-code` option is used in conjunction with `--redirect-ok`, `--response-code` will be evaluated off
+  of the status of the eventual destination.
+  - For an unspecified status check, if `--redirect-ok` is false, receiving a redirect will return a `warning` status.  If true, it will return an `ok` status.
 * Headers should be in the form of "Header-Name: Header value".
 
 ### http-perf
