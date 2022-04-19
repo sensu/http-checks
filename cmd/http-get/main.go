@@ -47,7 +47,7 @@ var (
 			Argument:  "url",
 			Shorthand: "u",
 			Default:   "http://localhost:80/",
-			Usage:     "URL to test",
+			Usage:     "URL to get",
 			Value:     &plugin.URL,
 		},
 		{

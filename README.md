@@ -256,7 +256,7 @@ Flags:
   -K, --mtls-key-file string     Key file for mutual TLS auth in PEM format
   -T, --timeout int              Request timeout in seconds (default 15)
   -t, --trusted-ca-file string   TLS CA certificate bundle in PEM format
-  -u, --url string               URL to test (default "http://localhost:80/")
+  -u, --url string               URL to get (default "http://localhost:80/")
 
 Use "http-get [command] --help" for more information about a command.
 ```
