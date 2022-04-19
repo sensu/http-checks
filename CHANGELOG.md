@@ -7,6 +7,10 @@ Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## [0.6.0] - 2022-04-19
+
+- Add `http-get` command, to serve as a cross-platform `wget`/`curl` replacement.
+
 ## [0.5.0] - 2021-12-01
 
 ### Breaking Changes
