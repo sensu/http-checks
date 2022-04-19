@@ -191,7 +191,7 @@ func executeCheck(event *corev2.Event) (int, error) {
 		return sensu.CheckStateCritical, nil
 	}
 
-	fmt.Printf(string(body))
+	fmt.Printf("%s",string(body))
 
 	return sensu.CheckStateOK, nil
 }
