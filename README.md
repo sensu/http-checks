@@ -12,6 +12,7 @@
   - [http-check](#http-check)
   - [http-perf](#http-perf)
   - [http-json](#http-json)
+  - [http-get](#http-get)
 - [Configuration](#configuration)
   - [Asset registration](#asset-registration)
   - [Check definitions](#check-definition)
@@ -38,6 +39,7 @@ response body
 * `http-perf` - for checking HTTP performance by measuring response times,
 provides metrics in nagios_perfdata format
 * `http-json` - for querying JSON output from an HTTP request
+* `http-get` - for fetching metrics from HTTP sources
 
 ## Usage examples
 
@@ -230,6 +232,62 @@ http-json OK:  The value 200 found at .status matched with expression "< 300" an
 
 * Headers should be in the form of "Header-Name: Header value".
 
+
+### http-get
+
+#### Help output
+
+```
+HTTP GET Check
+
+Usage:
+  http-get [flags]
+  http-get [command]
+
+Available Commands:
+  help        Help about any command
+  version     Print the version number of this plugin
+
+Flags:
+  -H, --header strings           Additional header(s) to send in check request
+  -h, --help                     help for http-get
+  -i, --insecure-skip-verify     Skip TLS certificate verification (not recommended!)
+  -C, --mtls-cert-file string    Certificate file for mutual TLS auth in PEM format
+  -K, --mtls-key-file string     Key file for mutual TLS auth in PEM format
+  -T, --timeout int              Request timeout in seconds (default 15)
+  -t, --trusted-ca-file string   TLS CA certificate bundle in PEM format
+  -u, --url string               URL to get (default "http://localhost:80/")
+
+Use "http-get [command] --help" for more information about a command.
+```
+
+#### Using the `http-get` Check
+
+This check is intended to provide a Sensu-native way of fetching the output
+of a HTTP GET request against a metrics endpoint, so that those metrics 
+can be processed by Sensu's `output_metrics_threshold` features.
+
+While this functionality is overlapped by default tools like `wget`, `curl`,
+and Windows's `Invoke-WebRequest` PowerShell commandlet, this provides a 
+cross-platform solution to fetching these HTTP-accessible metrics in a 
+Sensu-native context.
+
+This plugin will result in a critical exit status code if the body is empty
+or if the HTTP GET request fails.
+
+#### Example(s)
+
+```
+# Prometheus node_exporter example - fetching Prometheus metrics from node_exporter
+http-get --url http://localhost:9100
+[... output is the metrics in Prometheus format ...]
+```
+
+#### Note(s)
+
+* Headers should be in the form of "Header-Name: Header value".
+
+
 ## Configuration
 
 ### Asset registration
@@ -299,6 +357,28 @@ spec:
   runtime_assets:
   - nixwiz/http-checks
 ```
+#### http-get
+
+```yml
+---
+type: CheckConfig
+api_version: core/v2
+metadata:
+  name: prometheus-node-exporter
+  namespace: default
+spec:
+  command: http-get --url http://localhost:9100
+  subscriptions:
+  - system
+  runtime_assets:
+  - sensu/http-checks:0.6.0
+  output_metrics_format: prometheus_text
+  output_metric_handlers:
+  - metrics
+  output_metric_tags:
+  - name: entity
+    value: "{{ .name }}"
+```
 
 ## Installation from source
 
@@ -313,6 +393,7 @@ From the local path of the http-checks repository:
 go build -o bin/http-check ./cmd/http-check
 go build -o bin/http-perf ./cmd/http-perf
 go build -o bin/http-json ./cmd/http-json
+go build -o bin/http-get ./cmd/http-get
 ```
 
 ## Contributing
