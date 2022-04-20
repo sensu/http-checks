@@ -16,7 +16,7 @@ import (
 
 	"github.com/PaesslerAG/gval"
 	"github.com/itchyny/gojq"
-	"github.com/sensu-community/sensu-plugin-sdk/sensu"
+	"github.com/sensu/sensu-plugin-sdk/sensu"
 	corev2 "github.com/sensu/sensu-go/api/core/v2"
 )
 
