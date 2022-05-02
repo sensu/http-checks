@@ -173,7 +173,13 @@ func executeCheck(event *corev2.Event) (int, error) {
 	if len(plugin.Headers) > 0 {
 		for _, header := range plugin.Headers {
 			headerSplit := strings.SplitN(header, ":", 2)
-			req.Header.Set(strings.TrimSpace(headerSplit[0]), strings.TrimSpace(headerSplit[1]))
+			headerKey := strings.TrimSpace(headerSplit[0])
+			headerValue := strings.TrimSpace(headerSplit[1])
+			if strings.EqualFold(headerKey, "host") {
+				req.Host = headerValue
+				continue
+			}
+			req.Header.Set(headerKey, headerValue)
 		}
 	}
 
