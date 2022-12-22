@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sensu/sensu-plugin-sdk/sensu"
 	corev2 "github.com/sensu/sensu-go/api/core/v2"
 	"github.com/sensu/sensu-go/types"
+	"github.com/sensu/sensu-plugin-sdk/sensu"
 )
 
 // Config represents the check plugin config.
@@ -170,8 +170,6 @@ func checkArgs(event *types.Event) (int, error) {
 		tlsConfig.RootCAs = caCertPool
 	}
 	tlsConfig.InsecureSkipVerify = plugin.InsecureSkipVerify
-
-	tlsConfig.CipherSuites = corev2.DefaultCipherSuites
 
 	if (len(plugin.MTLSKeyFile) > 0 && len(plugin.MTLSCertFile) == 0) || (len(plugin.MTLSCertFile) > 0 && len(plugin.MTLSKeyFile) == 0) {
 		return sensu.CheckStateWarning, fmt.Errorf("mTLS auth requires both --mtls-key-file and --mtls-cert-file")
