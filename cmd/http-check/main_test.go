@@ -88,12 +88,13 @@ func TestExecuteCheck(t *testing.T) {
 	var test = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal("Test Header 1 Value", r.Header.Get("Test-Header-1"))
 		assert.Equal("Test Header 2 Value", r.Header.Get("Test-Header-2"))
+		assert.Equal("foo.bar.tld", r.Host)
 	}))
 	_, err := url.ParseRequestURI(test.URL)
 	require.NoError(t, err)
 	plugin.URL = test.URL
 	plugin.SearchString = ""
-	plugin.Headers = []string{"Test-Header-1: Test Header 1 Value", "Test-Header-2: Test Header 2 Value"}
+	plugin.Headers = []string{"Test-Header-1: Test Header 1 Value", "Test-Header-2: Test Header 2 Value", "Host: foo.bar.tld"}
 	status, err := executeCheck(event)
 	assert.NoError(err)
 	assert.Equal(sensu.CheckStateOK, status)
