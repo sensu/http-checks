@@ -1,6 +1,6 @@
-[![Sensu Bonsai Asset](https://img.shields.io/badge/Bonsai-Download%20Me-brightgreen.svg?colorB=89C967&logo=sensu)](https://bonsai.sensu.io/assets/nixwiz/http-checks)
-![Go Test](https://github.com/nixwiz/http-checks/workflows/Go%20Test/badge.svg)
-![goreleaser](https://github.com/nixwiz/http-checks/workflows/goreleaser/badge.svg)
+[![Sensu Bonsai Asset](https://img.shields.io/badge/Bonsai-Download%20Me-brightgreen.svg?colorB=89C967&logo=sensu)](https://bonsai.sensu.io/assets/sensu/http-checks)
+![Go Test](https://github.com/sensu/http-checks/workflows/Go%20Test/badge.svg)
+![goreleaser](https://github.com/sensu/http-checks/workflows/goreleaser/badge.svg)
 
 # http-checks
 
@@ -297,7 +297,7 @@ using an asset, please consider doing so! If you're using sensuctl 5.13 with
 Sensu Backend 5.13 or later, you can use the following command to add the asset:
 
 ```
-sensuctl asset add nixwiz/http-checks
+sensuctl asset add sensu/http-checks
 ```
 
 If you're using an earlier version of sensuctl, you can find the asset on the [Bonsai Asset Index][3].
@@ -318,7 +318,7 @@ spec:
   subscriptions:
   - system
   runtime_assets:
-  - nixwiz/http-checks
+  - sensu/http-checks
 ```
 
 #### http-perf
@@ -335,7 +335,7 @@ spec:
   subscriptions:
   - system
   runtime_assets:
-  - nixwiz/http-checks
+  - sensu/http-checks
   output_metric_format: nagios_perfdata
   output_metric-handlers:
   - influxdb
@@ -355,7 +355,7 @@ spec:
   subscriptions:
   - system
   runtime_assets:
-  - nixwiz/http-checks
+  - sensu/http-checks
 ```
 #### http-get
 
@@ -402,7 +402,7 @@ For more information about contributing to this plugin, see [Contributing][4].
 
 [1]: https://docs.sensu.io/sensu-go/latest/reference/checks/
 [2]: https://docs.sensu.io/sensu-go/latest/reference/assets/
-[3]: https://bonsai.sensu.io/assets/nixwiz/http-checks
+[3]: https://bonsai.sensu.io/assets/sensu/http-checks
 [4]: https://github.com/sensu/sensu-go/blob/master/CONTRIBUTING.md
 [5]: https://github.com/ncr-devops-platform/nagiosfoundation
 [6]: https://github.com/stedolan/jq

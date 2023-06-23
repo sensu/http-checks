@@ -1,4 +1,4 @@
-module github.com/nixwiz/http-checks
+module github.com/sensu/http-checks
 
 go 1.18
 
