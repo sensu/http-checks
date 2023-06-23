@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/elfranne/sensu-plugin-sdk/sensu"
 	corev2 "github.com/sensu/core/v2"
-	"github.com/sensu/sensu-plugin-sdk/sensu"
 )
 
 // Config represents the check plugin config.
@@ -104,7 +104,7 @@ var (
 			Usage:     "Provide output in milliseconds (default false, display in seconds)",
 			Value:     &plugin.OutputInMilliseconds,
 		},
-		&sensu.PluginConfigOption[ ]{
+		&sensu.PluginConfigOption[[]string]{
 			Path:      "header",
 			Env:       "",
 			Argument:  "header",

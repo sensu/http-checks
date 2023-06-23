@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/elfranne/sensu-plugin-sdk/sensu"
 	corev2 "github.com/sensu/core/v2"
-	"github.com/sensu/sensu-plugin-sdk/sensu"
 )
 
 // Config represents the check plugin config.
@@ -41,7 +41,7 @@ var (
 	}
 
 	options = []sensu.ConfigOption{
-		{
+		&sensu.PluginConfigOption[string]{
 			Path:      "url",
 			Env:       "CHECK_URL",
 			Argument:  "url",
@@ -50,7 +50,7 @@ var (
 			Usage:     "URL to get",
 			Value:     &plugin.URL,
 		},
-		{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "insecure-skip-verify",
 			Env:       "",
 			Argument:  "insecure-skip-verify",
@@ -59,7 +59,7 @@ var (
 			Usage:     "Skip TLS certificate verification (not recommended!)",
 			Value:     &plugin.InsecureSkipVerify,
 		},
-		{
+		&sensu.PluginConfigOption[string]{
 			Path:      "trusted-ca-file",
 			Env:       "",
 			Argument:  "trusted-ca-file",
@@ -68,7 +68,7 @@ var (
 			Usage:     "TLS CA certificate bundle in PEM format",
 			Value:     &plugin.TrustedCAFile,
 		},
-		{
+		&sensu.PluginConfigOption[int]{
 			Path:      "timeout",
 			Env:       "",
 			Argument:  "timeout",
@@ -77,7 +77,7 @@ var (
 			Usage:     "Request timeout in seconds",
 			Value:     &plugin.Timeout,
 		},
-		{
+		&sensu.PluginConfigOption[[]string]{
 			Path:      "header",
 			Env:       "",
 			Argument:  "header",
@@ -86,7 +86,7 @@ var (
 			Usage:     "Additional header(s) to send in check request",
 			Value:     &plugin.Headers,
 		},
-		{
+		&sensu.PluginConfigOption[string]{
 			Path:      "mtls-key-file",
 			Env:       "",
 			Argument:  "mtls-key-file",
@@ -95,7 +95,7 @@ var (
 			Usage:     "Key file for mutual TLS auth in PEM format",
 			Value:     &plugin.MTLSKeyFile,
 		},
-		{
+		&sensu.PluginConfigOption[string]{
 			Path:      "mtls-cert-file",
 			Env:       "",
 			Argument:  "mtls-cert-file",

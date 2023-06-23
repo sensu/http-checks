@@ -55,6 +55,8 @@ github.com/dgryski/go-sip13 v0.0.0-20181026042036-e10d5fee7954/go.mod h1:vAd38F8
 github.com/echlebek/crock v1.0.1 h1:KbzamClMIfVIkkjq/GTXf+N16KylYBpiaTitO3f1ujg=
 github.com/echlebek/timeproxy v1.0.0 h1:V41/v8tmmMDNMA2GrBPI45nlXb3F7+OY+nJz1BqKsCk=
 github.com/echlebek/timeproxy v1.0.0/go.mod h1:0dg2Lnb8no/jFwoMQKMTU6iAivgoMptGqSTprhnrRtk=
+github.com/elfranne/sensu-plugin-sdk v0.16.1-dev h1:76HztkZcOaDIoWGSGzCcNYyRHcGCEnLj/1yfPchxmH8=
+github.com/elfranne/sensu-plugin-sdk v0.16.1-dev/go.mod h1:rNr9w7xPGj0l7gRINCFDpruoCgj7zOZjKcsQ6Tx+oMk=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1mIlRU8Am5FuJP05cCM98=
@@ -219,8 +221,6 @@ github.com/sensu/sensu-api-tools v0.1.0/go.mod h1:SNISS4OhwNSZI9/YKTQr1bghOEwed9
 github.com/sensu/sensu-go/types v0.12.0 h1:t8gupS1QhkuA/b9LzTaF0h6DBGHX2UzKHyuBPhj/PoA=
 github.com/sensu/sensu-licensing/v2 v2.2.1 h1:9JI4iVm4ujWN4etI/Kdper6Q2lOn3HIEaGe234N8j40=
 github.com/sensu/sensu-licensing/v2 v2.2.1/go.mod h1:53lwddwN4XwZUld5KtnWQduSH6F8rBOsWuEk2EUeooI=
-github.com/sensu/sensu-plugin-sdk v0.18.0 h1:aR5N9SsqRm1NqiJo7k8GeLEPwGQIfeY4bbePPByUdnI=
-github.com/sensu/sensu-plugin-sdk v0.18.0/go.mod h1:NCcvkFZka5Az4Z+l9greCQQdEzTfilO4+JoURmELCa4=
 github.com/shopspring/decimal v1.3.1 h1:2Usl1nmF/WZucqkFZhnfFYxxxu8LG21F6nPQBE5gKV8=
 github.com/shopspring/decimal v1.3.1/go.mod h1:DKyhrW/HYNuLGql+MJL6WCR6knT2jwCFRcu2hWCYk4o=
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=

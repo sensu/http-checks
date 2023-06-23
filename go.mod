@@ -4,9 +4,9 @@ go 1.18
 
 require (
 	github.com/PaesslerAG/gval v1.2.2
+	github.com/elfranne/sensu-plugin-sdk v0.16.1-dev
 	github.com/itchyny/gojq v0.12.13
 	github.com/sensu/core/v2 v2.19.0
-	github.com/sensu/sensu-plugin-sdk v0.18.0
 	github.com/stretchr/testify v1.8.4
 )
 

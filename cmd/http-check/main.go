@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/elfranne/sensu-plugin-sdk/sensu"
 	corev2 "github.com/sensu/core/v2"
-	"github.com/sensu/sensu-plugin-sdk/sensu"
 )
 
 // Config represents the check plugin config.
@@ -43,7 +43,7 @@ var (
 	}
 
 	options = []sensu.ConfigOption{
-		{
+		&sensu.PluginConfigOption[string]{
 			Path:      "url",
 			Env:       "CHECK_URL",
 			Argument:  "url",
@@ -52,7 +52,7 @@ var (
 			Usage:     "URL to test",
 			Value:     &plugin.URL,
 		},
-		{
+		&sensu.PluginConfigOption[string]{
 			Path:      "search-string",
 			Env:       "CHECK_SEARCH_STRING",
 			Argument:  "search-string",
@@ -61,7 +61,7 @@ var (
 			Usage:     "String to search for, if not provided do status check only",
 			Value:     &plugin.SearchString,
 		},
-		{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "insecure-skip-verify",
 			Env:       "",
 			Argument:  "insecure-skip-verify",
@@ -70,7 +70,7 @@ var (
 			Usage:     "Skip TLS certificate verification (not recommended!)",
 			Value:     &plugin.InsecureSkipVerify,
 		},
-		{
+		&sensu.PluginConfigOption[string]{
 			Path:      "trusted-ca-file",
 			Env:       "",
 			Argument:  "trusted-ca-file",
@@ -79,7 +79,7 @@ var (
 			Usage:     "TLS CA certificate bundle in PEM format",
 			Value:     &plugin.TrustedCAFile,
 		},
-		{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "redirect-ok",
 			Env:       "",
 			Argument:  "redirect-ok",
@@ -88,7 +88,7 @@ var (
 			Usage:     "Allow redirects",
 			Value:     &plugin.RedirectOK,
 		},
-		{
+		&sensu.PluginConfigOption[int]{
 			Path:      "timeout",
 			Env:       "",
 			Argument:  "timeout",
@@ -97,7 +97,7 @@ var (
 			Usage:     "Request timeout in seconds",
 			Value:     &plugin.Timeout,
 		},
-		{
+		&sensu.PluginConfigOption[[]string]{
 			Path:      "header",
 			Env:       "",
 			Argument:  "header",
@@ -106,7 +106,7 @@ var (
 			Usage:     "Additional header(s) to send in check request",
 			Value:     &plugin.Headers,
 		},
-		{
+		&sensu.PluginConfigOption[string]{
 			Path:      "mtls-key-file",
 			Env:       "",
 			Argument:  "mtls-key-file",
@@ -115,7 +115,7 @@ var (
 			Usage:     "Key file for mutual TLS auth in PEM format",
 			Value:     &plugin.MTLSKeyFile,
 		},
-		{
+		&sensu.PluginConfigOption[string]{
 			Path:      "mtls-cert-file",
 			Env:       "",
 			Argument:  "mtls-cert-file",
@@ -147,7 +147,7 @@ func checkArgs(event *corev2.Event) (int, error) {
 	if len(plugin.TrustedCAFile) > 0 {
 		caCertPool, err := corev2.LoadCACerts(plugin.TrustedCAFile)
 		if err != nil {
-			return sensu.CheckStateWarning, fmt.Errorf("Error loading specified CA file")
+			return sensu.CheckStateWarning, fmt.Errorf("error loading specified CA file")
 		}
 		tlsConfig.RootCAs = caCertPool
 	}
@@ -159,7 +159,7 @@ func checkArgs(event *corev2.Event) (int, error) {
 	if len(plugin.MTLSKeyFile) > 0 && len(plugin.MTLSCertFile) > 0 {
 		cert, err := tls.LoadX509KeyPair(plugin.MTLSCertFile, plugin.MTLSKeyFile)
 		if err != nil {
-			return sensu.CheckStateWarning, fmt.Errorf("Failed to load mTLS key pair %s/%s: %v", plugin.MTLSCertFile, plugin.MTLSKeyFile, err)
+			return sensu.CheckStateWarning, fmt.Errorf("failed to load mTLS key pair %s/%s: %v", plugin.MTLSCertFile, plugin.MTLSKeyFile, err)
 		}
 		tlsConfig.Certificates = []tls.Certificate{cert}
 	}
