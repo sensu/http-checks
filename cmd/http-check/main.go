@@ -13,8 +13,7 @@ import (
 	"strings"
 	"time"
 
-	corev2 "github.com/sensu/sensu-go/api/core/v2"
-	"github.com/sensu/sensu-go/types"
+	corev2 "github.com/sensu/core/v2"
 	"github.com/sensu/sensu-plugin-sdk/sensu"
 )
 
@@ -43,7 +42,7 @@ var (
 		},
 	}
 
-	options = []*sensu.PluginConfigOption{
+	options = []sensu.ConfigOption{
 		{
 			Path:      "url",
 			Env:       "CHECK_URL",
@@ -133,7 +132,7 @@ func main() {
 	check.Execute()
 }
 
-func checkArgs(event *types.Event) (int, error) {
+func checkArgs(event *corev2.Event) (int, error) {
 	if len(plugin.URL) == 0 {
 		return sensu.CheckStateWarning, fmt.Errorf("--url or CHECK_URL environment variable is required")
 	}
@@ -168,7 +167,7 @@ func checkArgs(event *types.Event) (int, error) {
 	return sensu.CheckStateOK, nil
 }
 
-func executeCheck(event *types.Event) (int, error) {
+func executeCheck(event *corev2.Event) (int, error) {
 
 	client := http.DefaultClient
 	client.Transport = http.DefaultTransport
