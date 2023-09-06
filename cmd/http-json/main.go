@@ -100,7 +100,7 @@ var (
 			Usage:     "Expression for comparing result of query",
 			Value:     &plugin.Expression,
 		},
-		&sensu.PluginConfigOption[[]string]{
+		&sensu.SlicePluginConfigOption[string]{
 			Path:      "header",
 			Env:       "",
 			Argument:  "header",
