@@ -77,7 +77,7 @@ var (
 			Usage:     "Request timeout in seconds",
 			Value:     &plugin.Timeout,
 		},
-		&sensu.PluginConfigOption[[]string]{
+		&sensu.SlicePluginConfigOption[string]{
 			Path:      "header",
 			Env:       "",
 			Argument:  "header",
