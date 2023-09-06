@@ -104,7 +104,7 @@ var (
 			Usage:     "Provide output in milliseconds (default false, display in seconds)",
 			Value:     &plugin.OutputInMilliseconds,
 		},
-		&sensu.PluginConfigOption[[]string]{
+		&sensu.SlicePluginConfigOption[string]{
 			Path:      "header",
 			Env:       "",
 			Argument:  "header",
