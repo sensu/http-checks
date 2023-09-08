@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"testing"
 
+	corev2 "github.com/sensu/core/v2"
 	"github.com/sensu/sensu-plugin-sdk/sensu"
-	corev2 "github.com/sensu/sensu-go/api/core/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

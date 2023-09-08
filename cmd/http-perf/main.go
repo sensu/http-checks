@@ -9,8 +9,7 @@ import (
 	"strings"
 	"time"
 
-	corev2 "github.com/sensu/sensu-go/api/core/v2"
-	"github.com/sensu/sensu-go/types"
+	corev2 "github.com/sensu/core/v2"
 	"github.com/sensu/sensu-plugin-sdk/sensu"
 )
 
@@ -41,8 +40,8 @@ var (
 		},
 	}
 
-	options = []*sensu.PluginConfigOption{
-		{
+	options = []sensu.ConfigOption{
+		&sensu.PluginConfigOption[string]{
 			Path:      "url",
 			Env:       "CHECK_URL",
 			Argument:  "url",
@@ -51,7 +50,7 @@ var (
 			Usage:     "URL to test",
 			Value:     &plugin.URL,
 		},
-		{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "insecure-skip-verify",
 			Env:       "",
 			Argument:  "insecure-skip-verify",
@@ -60,7 +59,7 @@ var (
 			Usage:     "Skip TLS certificate verification (not recommended!)",
 			Value:     &plugin.InsecureSkipVerify,
 		},
-		{
+		&sensu.PluginConfigOption[string]{
 			Path:      "trusted-ca-file",
 			Env:       "",
 			Argument:  "trusted-ca-file",
@@ -69,7 +68,7 @@ var (
 			Usage:     "TLS CA certificate bundle in PEM format",
 			Value:     &plugin.TrustedCAFile,
 		},
-		{
+		&sensu.PluginConfigOption[int]{
 			Path:      "timeout",
 			Env:       "",
 			Argument:  "timeout",
@@ -78,7 +77,7 @@ var (
 			Usage:     "Request timeout in seconds",
 			Value:     &plugin.Timeout,
 		},
-		{
+		&sensu.PluginConfigOption[string]{
 			Path:      "warning",
 			Env:       "",
 			Argument:  "warning",
@@ -87,7 +86,7 @@ var (
 			Usage:     "Warning threshold, can be expressed as seconds or milliseconds (1s = 1000ms)",
 			Value:     &plugin.Warning,
 		},
-		{
+		&sensu.PluginConfigOption[string]{
 			Path:      "critical",
 			Env:       "",
 			Argument:  "critical",
@@ -96,7 +95,7 @@ var (
 			Usage:     "Critical threshold, can be expressed as seconds or milliseconds (1s = 1000ms)",
 			Value:     &plugin.Critical,
 		},
-		{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "output-in-ms",
 			Env:       "",
 			Argument:  "output-in-ms",
@@ -105,7 +104,7 @@ var (
 			Usage:     "Provide output in milliseconds (default false, display in seconds)",
 			Value:     &plugin.OutputInMilliseconds,
 		},
-		{
+		&sensu.SlicePluginConfigOption[string]{
 			Path:      "header",
 			Env:       "",
 			Argument:  "header",
@@ -114,7 +113,7 @@ var (
 			Usage:     "Additional header(s) to send in check request",
 			Value:     &plugin.Headers,
 		},
-		{
+		&sensu.PluginConfigOption[string]{
 			Path:      "mtls-key-file",
 			Env:       "",
 			Argument:  "mtls-key-file",
@@ -123,7 +122,7 @@ var (
 			Usage:     "Key file for mutual TLS auth in PEM format",
 			Value:     &plugin.MTLSKeyFile,
 		},
-		{
+		&sensu.PluginConfigOption[string]{
 			Path:      "mtls-cert-file",
 			Env:       "",
 			Argument:  "mtls-cert-file",
@@ -140,7 +139,7 @@ func main() {
 	check.Execute()
 }
 
-func checkArgs(event *types.Event) (int, error) {
+func checkArgs(event *corev2.Event) (int, error) {
 	var err error
 
 	if len(plugin.URL) == 0 {
@@ -185,7 +184,7 @@ func checkArgs(event *types.Event) (int, error) {
 	return sensu.CheckStateOK, nil
 }
 
-func executeCheck(event *types.Event) (int, error) {
+func executeCheck(event *corev2.Event) (int, error) {
 
 	client := http.DefaultClient
 	client.Transport = http.DefaultTransport
