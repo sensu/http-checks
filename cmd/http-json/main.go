@@ -15,9 +15,9 @@ import (
 	"time"
 
 	"github.com/PaesslerAG/gval"
-	"github.com/elfranne/sensu-plugin-sdk/sensu"
 	"github.com/itchyny/gojq"
 	corev2 "github.com/sensu/core/v2"
+	"github.com/sensu/sensu-plugin-sdk/sensu"
 )
 
 // Config represents the check plugin config.

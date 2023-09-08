@@ -5,7 +5,7 @@ builds:
     id: "http-check"
     env:
     - CGO_ENABLED=0
-    ldflags: '-s -w -X github.com/elfranne/sensu-plugin-sdk/version.version={{.Version}} -X github.com/elfranne/sensu-plugin-sdk/version.commit={{.Commit}} -X github.com/elfranne/sensu-plugin-sdk/version.date={{.Date}}'
+    ldflags: '-s -w -X github.com/sensu/sensu-plugin-sdk/version.version={{.Version}} -X github.com/sensu/sensu-plugin-sdk/version.commit={{.Commit}} -X github.com/elfranne/sensu-plugin-sdk/version.date={{.Date}}'
     binary: bin/http-check
     goos:
       - darwin
@@ -35,7 +35,7 @@ builds:
     id: "http-perf"
     env:
     - CGO_ENABLED=0
-    ldflags: '-s -w -X github.com/elfranne/sensu-plugin-sdk/version.version={{.Version}} -X github.com/elfranne/sensu-plugin-sdk/version.commit={{.Commit}} -X github.com/elfranne/sensu-plugin-sdk/version.date={{.Date}}'
+    ldflags: '-s -w -X github.com/sensu/sensu-plugin-sdk/version.version={{.Version}} -X github.com/sensu/sensu-plugin-sdk/version.commit={{.Commit}} -X github.com/elfranne/sensu-plugin-sdk/version.date={{.Date}}'
     binary: bin/http-perf
     goos:
       - darwin
@@ -65,7 +65,7 @@ builds:
     id: "http-json"
     env:
     - CGO_ENABLED=0
-    ldflags: '-s -w -X github.com/elfranne/sensu-plugin-sdk/version.version={{.Version}} -X github.com/elfranne/sensu-plugin-sdk/version.commit={{.Commit}} -X github.com/elfranne/sensu-plugin-sdk/version.date={{.Date}}'
+    ldflags: '-s -w -X github.com/sensu/sensu-plugin-sdk/version.version={{.Version}} -X github.com/sensu/sensu-plugin-sdk/version.commit={{.Commit}} -X github.com/elfranne/sensu-plugin-sdk/version.date={{.Date}}'
     binary: bin/http-json
     goos:
       - darwin
@@ -94,7 +94,7 @@ builds:
     id: "http-get"
     env:
     - CGO_ENABLED=0
-    ldflags: '-s -w -X github.com/elfranne/sensu-plugin-sdk/version.version={{.Version}} -X github.com/elfranne/sensu-plugin-sdk/version.commit={{.Commit}} -X github.com/elfranne/sensu-plugin-sdk/version.date={{.Date}}'
+    ldflags: '-s -w -X github.com/sensu/sensu-plugin-sdk/version.version={{.Version}} -X github.com/sensu/sensu-plugin-sdk/version.commit={{.Commit}} -X github.com/elfranne/sensu-plugin-sdk/version.date={{.Date}}'
     binary: bin/http-get
     goos:
       - darwin
