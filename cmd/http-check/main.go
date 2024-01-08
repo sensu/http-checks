@@ -5,9 +5,11 @@
 package main
 
 import (
+	"bytes"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -29,6 +31,8 @@ type Config struct {
 	Headers            []string
 	MTLSKeyFile        string
 	MTLSCertFile       string
+	Method             string
+	Postdata           string
 }
 
 var (
@@ -124,6 +128,22 @@ var (
 			Usage:     "Certificate file for mutual TLS auth in PEM format",
 			Value:     &plugin.MTLSCertFile,
 		},
+		&sensu.PluginConfigOption[string]{
+			Path:      "method",
+			Argument:  "method",
+			Shorthand: "m",
+			Default:   "GET",
+			Usage:     "Specify http method",
+			Value:     &plugin.Method,
+		},
+		&sensu.PluginConfigOption[string]{
+			Path:      "postdata",
+			Argument:  "post-data",
+			Shorthand: "p",
+			Default:   "",
+			Usage:     "Data to sent via POST method",
+			Value:     &plugin.Postdata,
+		},
 	}
 )
 
@@ -164,6 +184,10 @@ func checkArgs(event *corev2.Event) (int, error) {
 		tlsConfig.Certificates = []tls.Certificate{cert}
 	}
 
+	if (plugin.Method == "GET" && len(plugin.Postdata) > 0) || plugin.Method == "POST" && len(plugin.Postdata) < 1 {
+		return sensu.CheckStateWarning, fmt.Errorf("malformed POST parameters")
+	}
+
 	return sensu.CheckStateOK, nil
 }
 
@@ -185,10 +209,25 @@ func executeCheck(event *corev2.Event) (int, error) {
 		client.Transport.(*http.Transport).TLSClientConfig = &tlsConfig
 	}
 
-	req, err := http.NewRequest("GET", plugin.URL, nil)
-	if err != nil {
-		fmt.Printf("request creation error: %s\n", err)
-		return sensu.CheckStateCritical, nil
+	req := &http.Request{}
+	if plugin.Method == "POST" {
+		rawpost, _ := json.Marshal(plugin.Postdata)
+		if err != nil {
+			fmt.Printf("failed to parse Postdata: %s\n", err)
+			return sensu.CheckStateCritical, nil
+		}
+		postdata := bytes.NewBuffer(rawpost)
+		req, err = http.NewRequest(plugin.Method, plugin.URL, postdata)
+		if err != nil {
+			fmt.Printf("%s request creation error: %s\n",plugin.Method, err)
+			return sensu.CheckStateCritical, nil
+		}
+	} else {
+		req, err = http.NewRequest(plugin.Method, plugin.URL, nil)
+		if err != nil {
+			fmt.Printf("%s request creation error: %s\n",plugin.Method, err)
+			return sensu.CheckStateCritical, nil
+		}
 	}
 
 	if len(plugin.Headers) > 0 {
@@ -212,7 +251,7 @@ func executeCheck(event *corev2.Event) (int, error) {
 
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Printf("response body read error: %s\n", err)
 		return sensu.CheckStateCritical, nil

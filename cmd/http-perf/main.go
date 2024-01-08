@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptrace"
@@ -26,6 +28,8 @@ type Config struct {
 	Headers              []string
 	MTLSKeyFile          string
 	MTLSCertFile         string
+	Method               string
+	Postdata             string
 }
 
 var (
@@ -131,6 +135,22 @@ var (
 			Usage:     "Certificate file for mutual TLS auth in PEM format",
 			Value:     &plugin.MTLSCertFile,
 		},
+		&sensu.PluginConfigOption[string]{
+			Path:      "method",
+			Argument:  "method",
+			Shorthand: "m",
+			Default:   "GET",
+			Usage:     "Specify http method",
+			Value:     &plugin.Method,
+		},
+		&sensu.PluginConfigOption[string]{
+			Path:      "postdata",
+			Argument:  "post-data",
+			Shorthand: "p",
+			Default:   "",
+			Usage:     "Data to sent via POST method",
+			Value:     &plugin.Postdata,
+		},
 	}
 )
 
@@ -164,7 +184,7 @@ func checkArgs(event *corev2.Event) (int, error) {
 	if len(plugin.TrustedCAFile) > 0 {
 		caCertPool, err := corev2.LoadCACerts(plugin.TrustedCAFile)
 		if err != nil {
-			return sensu.CheckStateWarning, fmt.Errorf("Error loading specified CA file")
+			return sensu.CheckStateWarning, fmt.Errorf("error loading specified CA file")
 		}
 		tlsConfig.RootCAs = caCertPool
 	}
@@ -176,11 +196,13 @@ func checkArgs(event *corev2.Event) (int, error) {
 	if len(plugin.MTLSKeyFile) > 0 && len(plugin.MTLSCertFile) > 0 {
 		cert, err := tls.LoadX509KeyPair(plugin.MTLSCertFile, plugin.MTLSKeyFile)
 		if err != nil {
-			return sensu.CheckStateWarning, fmt.Errorf("Failed to load mTLS key pair %s/%s: %v", plugin.MTLSCertFile, plugin.MTLSKeyFile, err)
+			return sensu.CheckStateWarning, fmt.Errorf("failed to load mTLS key pair %s/%s: %v", plugin.MTLSCertFile, plugin.MTLSKeyFile, err)
 		}
 		tlsConfig.Certificates = []tls.Certificate{cert}
 	}
-
+	if (plugin.Method == "GET" && len(plugin.Postdata) > 0) || plugin.Method == "POST" && len(plugin.Postdata) < 1 {
+		return sensu.CheckStateWarning, fmt.Errorf("malformed POST parameters")
+	}
 	return sensu.CheckStateOK, nil
 }
 
@@ -199,10 +221,25 @@ func executeCheck(event *corev2.Event) (int, error) {
 		client.Transport.(*http.Transport).TLSClientConfig = &tlsConfig
 	}
 
-	req, err := http.NewRequest("GET", plugin.URL, nil)
-	if err != nil {
-		fmt.Printf("request creation error: %s\n", err)
-		return sensu.CheckStateCritical, nil
+	req := &http.Request{}
+	if plugin.Method == "POST" {
+		rawpost, _ := json.Marshal(plugin.Postdata)
+		if err != nil {
+			fmt.Printf("failed to parse Postdata: %s\n", err)
+			return sensu.CheckStateCritical, nil
+		}
+		postdata := bytes.NewBuffer(rawpost)
+		req, err = http.NewRequest(plugin.Method, plugin.URL, postdata)
+		if err != nil {
+			fmt.Printf("%s request creation error: %s\n", plugin.Method, err)
+			return sensu.CheckStateCritical, nil
+		}
+	} else {
+		req, err = http.NewRequest(plugin.Method, plugin.URL, nil)
+		if err != nil {
+			fmt.Printf("%s request creation error: %s\n", plugin.Method, err)
+			return sensu.CheckStateCritical, nil
+		}
 	}
 	if len(plugin.Headers) > 0 {
 		for _, header := range plugin.Headers {

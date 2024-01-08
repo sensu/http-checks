@@ -7,7 +7,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -189,7 +189,7 @@ func executeCheck(event *corev2.Event) (int, error) {
 
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Printf("read response body error: %s\n", err)
 		return sensu.CheckStateCritical, nil
