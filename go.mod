@@ -1,6 +1,6 @@
 module github.com/sensu/http-checks
 
-go 1.18
+go 1.20
 
 require (
 	github.com/PaesslerAG/gval v1.2.2
