@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -23,6 +24,7 @@ type Config struct {
 	sensu.PluginConfig
 	URL                string
 	SearchString       string
+	ResponseCode       []string
 	TrustedCAFile      string
 	InsecureSkipVerify bool
 	RedirectOK         bool
@@ -61,6 +63,15 @@ var (
 			Default:   "",
 			Usage:     "String to search for, if not provided do status check only",
 			Value:     &plugin.SearchString,
+		},
+		{
+			Path:      "response-code",
+			Env:       "CHECK_RESPONSE_CODE",
+			Argument:  "response-code",
+			Shorthand: "R",
+			Default:   []string{},
+			Usage:     "check for http response code, if not provided do status check only",
+			Value:     &plugin.ResponseCode,
 		},
 		{
 			Path:      "insecure-skip-verify",
@@ -145,6 +156,16 @@ func checkArgs(event *types.Event) (int, error) {
 			}
 		}
 	}
+
+	if len(plugin.ResponseCode) > 0 {
+		for _, code := range plugin.ResponseCode {
+			_, err := strconv.Atoi(code)
+			if err != nil {
+				return sensu.CheckStateCritical, fmt.Errorf("--response-code %q value malformed, should be a valid http response code ", code)
+			}
+		}
+	}
+
 	if len(plugin.TrustedCAFile) > 0 {
 		caCertPool, err := corev2.LoadCACerts(plugin.TrustedCAFile)
 		if err != nil {
@@ -228,6 +249,25 @@ func executeCheck(event *types.Event) (int, error) {
 		return sensu.CheckStateCritical, nil
 	}
 
+	// check for response code
+	if len(plugin.ResponseCode) > 0 {
+
+		ExpectedCodes := make([]int, len(plugin.ResponseCode))
+		for i, s := range plugin.ResponseCode {
+			ExpectedCodes[i], _ = strconv.Atoi(s)
+		}
+
+		found := contains(ExpectedCodes, resp.StatusCode)
+
+		if found {
+			fmt.Printf("%s OK: HTTP Status %v for %s\n", plugin.PluginConfig.Name, resp.StatusCode, resp.Request.URL)
+			return sensu.CheckStateOK, nil
+		} else {
+			fmt.Printf("%s CRITICAL: HTTP Status %v for %s. Expected %s\n", plugin.PluginConfig.Name, resp.StatusCode, plugin.URL, plugin.ResponseCode)
+			return sensu.CheckStateCritical, nil
+		}
+	}
+
 	switch {
 	case resp.StatusCode >= http.StatusBadRequest:
 		fmt.Printf("%s CRITICAL: HTTP Status %v for %s\n", plugin.PluginConfig.Name, resp.StatusCode, plugin.URL)
@@ -254,4 +294,13 @@ func executeCheck(event *types.Event) (int, error) {
 		fmt.Printf("%s OK: HTTP Status %v for %s\n", plugin.PluginConfig.Name, resp.StatusCode, plugin.URL)
 		return sensu.CheckStateOK, nil
 	}
+}
+
+func contains(s []int, val int) bool {
+	for _, v := range s {
+		if v == val {
+			return true
+		}
+	}
+	return false
 }

@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/sensu/sensu-plugin-sdk/sensu"
 	corev2 "github.com/sensu/sensu-go/api/core/v2"
+	"github.com/sensu/sensu-plugin-sdk/sensu"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -50,12 +50,18 @@ func TestExecuteCheck(t *testing.T) {
 		returnStatus  int
 		httpStatus    int
 		allowRedirect bool
+		responseCode  []string
 	}{
-		{sensu.CheckStateOK, http.StatusOK, false},
-		{sensu.CheckStateOK, http.StatusOK, true},
-		{sensu.CheckStateWarning, http.StatusMovedPermanently, false},
-		{sensu.CheckStateCritical, http.StatusBadRequest, false},
-		{sensu.CheckStateCritical, http.StatusInternalServerError, false},
+		{sensu.CheckStateOK, http.StatusOK, false, nil},
+		{sensu.CheckStateOK, http.StatusOK, true, nil},
+		{sensu.CheckStateCritical, http.StatusNotFound, true, []string{"301"}},
+		{sensu.CheckStateOK, http.StatusMovedPermanently, false, []string{"301"}},
+		{sensu.CheckStateOK, http.StatusOK, false, []string{"200"}},
+		{sensu.CheckStateOK, http.StatusNotFound, false, []string{"200", "404"}},
+		{sensu.CheckStateOK, http.StatusCreated, false, []string{"200", "201"}},
+		{sensu.CheckStateWarning, http.StatusMovedPermanently, false, nil},
+		{sensu.CheckStateCritical, http.StatusBadRequest, false, nil},
+		{sensu.CheckStateCritical, http.StatusInternalServerError, false, nil},
 	}
 
 	for _, tc := range testCasesStatus {
@@ -77,6 +83,7 @@ func TestExecuteCheck(t *testing.T) {
 		plugin.URL = test.URL
 		plugin.SearchString = ""
 		plugin.RedirectOK = tc.allowRedirect
+		plugin.ResponseCode = tc.responseCode
 		status, err := executeCheck(event)
 		assert.NoError(err)
 		assert.Equal(tc.returnStatus, status)

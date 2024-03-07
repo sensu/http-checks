@@ -6,6 +6,7 @@ and this project adheres to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+- Added new flag `--response-code` (`-R`) to check expected http status code of a request.
 
 ## [0.7.0] - 2022-04-19
 
