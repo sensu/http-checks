@@ -62,6 +62,7 @@ Flags:
   -u, --url string               URL to test (default "http://localhost:80/")
   -s, --search-string string     String to search for, if not provided do status check only
   -r, --redirect-ok              Allow redirects
+  -R, --response-code strings    check for http response code, if not provided do status check only
   -T, --timeout int              Request timeout in seconds (default 15)
   -H, --header strings           Additional header(s) to send in check request
   -C, --mtls-cert-file string    Certificate file for mutual TLS auth in PEM format
@@ -78,6 +79,18 @@ Use "http-check [command] --help" for more information about a command.
 ```
 http-check --url https://sensu.io --search-string Monitoring
 http-check OK: found "Monitoring" at https://sensu.io
+
+http-check --url https://sensu.io/notfound  --response-code 301
+http-check OK: HTTP Status 301 for https://sensu.io/notfound
+
+http-check --url https://sensu.io --response-code 200
+http-check OK: HTTP Status 200 for https://sensu.io
+
+http-check --url https://sensu.io/notfound --redirect-ok --response-code 301
+http-check CRITICAL: HTTP Status 200 for https://sensu.io/notfound. Expected [301]
+
+http-check --url https://sensu.io/notfound --redirect-ok --response-code 301,401,200
+http-check OK: HTTP Status 200 for https://sensu.io/oops
 
 http-check --url https://sensu.io --search-string droids
 http-check CRITICAL: "droids" not found at https://sensu.io
@@ -103,6 +116,7 @@ http-check OK: HTTP Status 200 for http://localhost:8000/health
 * When using `--redirect-ok` it affects both the string search and status checkfunctionality.
   - For a string search, if true, it searches for the string in the eventual destination. 
   - For a status check, if false, receiving a redirect will return a `warning` status.  If true, it will return an `ok` status.
+  - When the --response-code option is used in conjunction with --redirect-ok, --response-code will be evaluated for the status of the redirected destination.
 * Headers should be in the form of "Header-Name: Header value".
 
 ### http-perf
